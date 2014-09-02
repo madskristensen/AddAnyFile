@@ -1,6 +1,8 @@
 Add Any File
 ==========
 
+[![Build status](https://ci.appveyor.com/api/projects/status/252jpryc38qah37x)](https://ci.appveyor.com/project/madskristensen/addanyfile)
+
 A Visual Studio extension for easily adding new files to any project. Simply hit CTRL+A to create an empty file in the 
 selected folder or in the same folder as the selected file.
 
