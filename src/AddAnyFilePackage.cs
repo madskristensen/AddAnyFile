@@ -12,7 +12,7 @@ namespace MadsKristensen.AddAnyFile
 {
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
-    [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", "1.3", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [Guid(GuidList.guidAddAnyFilePkgString)]
     public sealed class AddAnyFilePackage : ExtensionPointPackage
@@ -45,19 +45,20 @@ namespace MadsKristensen.AddAnyFile
 
             if (!string.IsNullOrEmpty(input))
             {
-                string path = Path.Combine(folder, input);
+                string file = Path.Combine(folder, input);
 
-                if (!File.Exists(path))
+                if (!File.Exists(file))
                 {
-                    File.WriteAllText(path, string.Empty);
+                    File.WriteAllText(file, string.Empty);
 
-                    _dte.ItemOperations.OpenFile(path);
-                    ProjectItem projectItem = AddFileToActiveProject(path);
-                    // TODO: Select the new file in Solution Explorer. Help wanted.
+                    ProjectItem projectItem = AddFileToActiveProject(file);
+                    _dte.ItemOperations.OpenFile(file);
+
+                    SelectCurrentItem();
                 }
                 else
                 {
-                    System.Windows.Forms.MessageBox.Show("The file '" + path + "' already exist.");
+                    System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
                 }
             }
         }
@@ -102,7 +103,7 @@ namespace MadsKristensen.AddAnyFile
             return folder;
         }
 
-        public static UIHierarchyItem GetSelectedItem()
+        private static UIHierarchyItem GetSelectedItem()
         {
             var items = (Array)_dte.ToolWindows.SolutionExplorer.SelectedItems;
 
@@ -114,7 +115,7 @@ namespace MadsKristensen.AddAnyFile
             return null;
         }
 
-        public static ProjectItem AddFileToActiveProject(string fileName)
+        private static ProjectItem AddFileToActiveProject(string fileName)
         {
             Project project = GetActiveProject();
 
@@ -144,6 +145,19 @@ namespace MadsKristensen.AddAnyFile
             }
 
             return null;
+        }
+
+        private static void SelectCurrentItem()
+        {
+            System.Threading.ThreadPool.QueueUserWorkItem((o) =>
+            {
+                try
+                {
+                    _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
+                    _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
+                }
+                catch { /* Ignore any exceptions */ }
+            });
         }
     }
 }
