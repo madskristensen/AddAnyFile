@@ -49,7 +49,7 @@ namespace MadsKristensen.AddAnyFile
 
                 if (!File.Exists(file))
                 {
-                    File.WriteAllText(file, string.Empty);
+                    WriteFile(file);
 
                     ProjectItem projectItem = AddFileToActiveProject(file);
                     _dte.ItemOperations.OpenFile(file);
@@ -61,6 +61,17 @@ namespace MadsKristensen.AddAnyFile
                     System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
                 }
             }
+        }
+
+        private static void WriteFile(string file)
+        {
+            string extension = Path.GetExtension(file);
+            string content = string.Empty;
+
+            if (extension == ".json")
+                content = "{" + Environment.NewLine + Environment.NewLine + "}";
+
+            File.WriteAllText(file, content);
         }
 
         private static string FindFolder(UIHierarchyItem item)
