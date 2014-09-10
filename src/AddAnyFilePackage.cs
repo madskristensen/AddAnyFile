@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.Design;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using EnvDTE;
 using EnvDTE80;
@@ -66,12 +67,19 @@ namespace MadsKristensen.AddAnyFile
         private static void WriteFile(string file)
         {
             string extension = Path.GetExtension(file);
-            string content = string.Empty;
 
-            if (extension == ".json")
-                content = "{" + Environment.NewLine + Environment.NewLine + "}";
+            string assembly = Assembly.GetExecutingAssembly().Location;
+            string folder = Path.GetDirectoryName(assembly).ToLowerInvariant();
+            string template = Path.Combine(folder, "Templates\\", extension);
 
-            File.WriteAllText(file, content);
+            if (File.Exists(template))
+            {
+                File.Copy(template, file);
+            }
+            else
+            {
+                File.WriteAllText(file, string.Empty);
+            }
         }
 
         private static string FindFolder(UIHierarchyItem item)
