@@ -44,14 +44,17 @@ namespace MadsKristensen.AddAnyFile
             string folder = FindFolder(item);
             string input = Interaction.InputBox("Please enter a file name", "File name", "file.txt");
 
-            if (!string.IsNullOrEmpty(input))
+            if (string.IsNullOrEmpty(input))
+                return;
+
+            string file = Path.Combine(folder, input);
+
+            if (!File.Exists(file))
             {
-                string file = Path.Combine(folder, input);
+                int position = WriteFile(file);
 
-                if (!File.Exists(file))
+                try
                 {
-                    int position = WriteFile(file);
-
                     ProjectItem projectItem = AddFileToActiveProject(file);
                     Window window = _dte.ItemOperations.OpenFile(file);
 
@@ -64,10 +67,11 @@ namespace MadsKristensen.AddAnyFile
 
                     SelectCurrentItem();
                 }
-                else
-                {
-                    System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
-                }
+                catch { /* Something went wrong. What should we do about it? */ }
+            }
+            else
+            {
+                System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
             }
         }
 
