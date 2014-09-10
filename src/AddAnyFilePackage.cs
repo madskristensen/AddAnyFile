@@ -50,10 +50,17 @@ namespace MadsKristensen.AddAnyFile
 
                 if (!File.Exists(file))
                 {
-                    WriteFile(file);
+                    int position = WriteFile(file);
 
                     ProjectItem projectItem = AddFileToActiveProject(file);
-                    _dte.ItemOperations.OpenFile(file);
+                    Window window = _dte.ItemOperations.OpenFile(file);
+
+                    // Move cursor into position
+                    if (position > 0)
+                    {
+                        TextSelection selection = (TextSelection)window.Selection;
+                        selection.CharRight(Count: position - 1);
+                    }
 
                     SelectCurrentItem();
                 }
@@ -64,7 +71,7 @@ namespace MadsKristensen.AddAnyFile
             }
         }
 
-        private static void WriteFile(string file)
+        private static int WriteFile(string file)
         {
             string extension = Path.GetExtension(file);
 
@@ -74,12 +81,15 @@ namespace MadsKristensen.AddAnyFile
 
             if (File.Exists(template))
             {
-                File.Copy(template, file);
+                string content = File.ReadAllText(template);
+                int index = content.IndexOf('$');
+                content = content.Remove(index, 1);
+                File.WriteAllText(file, content);
+                return index;
             }
-            else
-            {
-                File.WriteAllText(file, string.Empty);
-            }
+
+            File.WriteAllText(file, string.Empty);
+            return 0;
         }
 
         private static string FindFolder(UIHierarchyItem item)
