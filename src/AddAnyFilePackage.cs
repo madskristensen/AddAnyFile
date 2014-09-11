@@ -3,6 +3,7 @@ using System.ComponentModel.Design;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualBasic;
@@ -77,6 +78,7 @@ namespace MadsKristensen.AddAnyFile
 
         private static int WriteFile(string file)
         {
+            Encoding encoding = Encoding.UTF8;
             string extension = Path.GetExtension(file);
 
             string assembly = Assembly.GetExecutingAssembly().Location;
@@ -88,11 +90,11 @@ namespace MadsKristensen.AddAnyFile
                 string content = File.ReadAllText(template);
                 int index = content.IndexOf('$');
                 content = content.Remove(index, 1);
-                File.WriteAllText(file, content);
+                File.WriteAllText(file, content, encoding);
                 return index;
             }
 
-            File.WriteAllText(file, string.Empty);
+            File.WriteAllText(file, string.Empty, encoding);
             return 0;
         }
 
