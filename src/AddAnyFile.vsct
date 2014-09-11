@@ -9,7 +9,7 @@
             <Button guid="guidAddAnyFileCmdSet" id="cmdidMyCommand" priority="0x0200" type="Button">
                 <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
                 <Strings>
-                    <ButtonText>New empty file...</ButtonText>
+                    <ButtonText>New Empty File...</ButtonText>
                 </Strings>
             </Button>
         </Buttons>
