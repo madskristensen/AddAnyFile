@@ -9,6 +9,7 @@
             <Button guid="guidAddAnyFileCmdSet" id="cmdidMyCommand" priority="0x0200" type="Button">
                 <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
                 <Strings>
+                    <CommandName>AddEmptyFile</CommandName>
                     <ButtonText>New Empty File...</ButtonText>
                 </Strings>
             </Button>
@@ -16,7 +17,7 @@
     </Commands>
 
     <KeyBindings>
-        <KeyBinding guid="guidAddAnyFileCmdSet" id="cmdidMyCommand" mod1="Alt" key1="A" editor="guidVSStd97"/>
+        <KeyBinding guid="guidAddAnyFileCmdSet" id="cmdidMyCommand" mod1="Shift" key1="VK_F2" editor="guidVSStd97"/>
     </KeyBindings>
 
     <Symbols>
