@@ -43,7 +43,11 @@ namespace MadsKristensen.AddAnyFile
                 return;
 
             string folder = FindFolder(item);
-            string input = Interaction.InputBox("Please enter a file name", "File name", "file.txt");
+
+            if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+                return;
+
+            string input = PromptForFileName(folder);
 
             if (string.IsNullOrEmpty(input))
                 return;
@@ -74,6 +78,13 @@ namespace MadsKristensen.AddAnyFile
             {
                 System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
             }
+        }
+
+        private static string PromptForFileName(string folder)
+        {
+            DirectoryInfo dir = new DirectoryInfo(folder);
+            string message = "Please enter a file name. \r\rThe file will be placed in the folder '" + dir.Name + "'";
+            return Interaction.InputBox(message, "File name", "file.txt");
         }
 
         private static int WriteFile(string file)
