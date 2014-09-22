@@ -14,7 +14,7 @@ namespace MadsKristensen.AddAnyFile
 {
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
-    [InstalledProductRegistration("#110", "#112", "1.4", IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", "1.5", IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [Guid(GuidList.guidAddAnyFilePkgString)]
     public sealed class AddAnyFilePackage : ExtensionPointPackage
