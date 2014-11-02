@@ -4,9 +4,9 @@
         <Identity Id="27dd9dea-6dd2-403e-929d-3ff20d896c5e" Version="1.5" Language="en-US" Publisher="Mads Kristensen" />
         <DisplayName>Add Empty File</DisplayName>
         <Description xml:space="preserve">Gives the ability to add an empty file with any extension and starting with a dot</Description>
-        <License>License.txt</License>
-        <Icon>logo.png</Icon>
-        <PreviewImage>logo.png</PreviewImage>
+        <License>Resources\License.txt</License>
+        <Icon>Resources\logo.png</Icon>
+        <PreviewImage>Resources\logo.png</PreviewImage>
         <Tags>file, add</Tags>
     </Metadata>
     <Installation InstalledByMsi="false">
