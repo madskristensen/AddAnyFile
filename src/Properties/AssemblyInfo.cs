@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
+using MadsKristensen.AddAnyFile;
 
 [assembly: AssemblyTitle("Add  Empty File")]
 [assembly: AssemblyDescription("Gives the ability to add an empty file with any extension and starting with a dot")]
@@ -15,8 +16,8 @@ using System.Runtime.InteropServices;
 [assembly: CLSCompliant(false)]
 [assembly: NeutralResourcesLanguage("en-US")]
 
-[assembly: AssemblyVersion("1.5")]
-[assembly: AssemblyFileVersion("1.5")]
+[assembly: AssemblyVersion(AddAnyFilePackage.Version)]
+[assembly: AssemblyFileVersion(AddAnyFilePackage.Version)]
 
 
 
