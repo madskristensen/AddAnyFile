@@ -138,6 +138,9 @@
     <Compile Include="Guids.cs" />
     <Compile Include="AddAnyFilePackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="Resources\preview.png">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Templates\.cs">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -170,7 +173,6 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="Resources\logo.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="Resources\Package.ico" />

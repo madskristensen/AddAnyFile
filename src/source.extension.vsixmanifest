@@ -6,7 +6,7 @@
         <Description xml:space="preserve">Gives the ability to add an empty file with any extension and starting with a dot</Description>
         <License>Resources\License.txt</License>
         <Icon>Resources\logo.png</Icon>
-        <PreviewImage>Resources\logo.png</PreviewImage>
+        <PreviewImage>Resources\preview.png</PreviewImage>
         <Tags>file, add</Tags>
     </Metadata>
     <Installation InstalledByMsi="false">
