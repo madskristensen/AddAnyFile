@@ -2,8 +2,8 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
         <Identity Id="27dd9dea-6dd2-403e-929d-3ff20d896c5e" Version="1.6" Language="en-US" Publisher="Mads Kristensen" />
-        <DisplayName>Add Empty File</DisplayName>
-        <Description xml:space="preserve">Gives the ability to add an empty file with any extension and starting with a dot</Description>
+        <DisplayName>Add New File</DisplayName>
+        <Description xml:space="preserve">The fastest and easiest way to add new files to any project - including files that start with a dot</Description>
         <License>Resources\License.txt</License>
         <Icon>Resources\logo.png</Icon>
         <PreviewImage>Resources\preview.png</PreviewImage>
