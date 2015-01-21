@@ -196,15 +196,15 @@ namespace MadsKristensen.AddAnyFile
 
         private static void SelectCurrentItem()
         {
+            if (_dte.Version != "11.0") // This errors in VS2012 for some reason.
+                return;
+
             System.Threading.ThreadPool.QueueUserWorkItem((o) =>
             {
                 try
                 {
-                    if (_dte.Version != "11.0") // This errors in VS2012 for some reason.
-                    {
-                        _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
-                        _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
-                    }
+                    _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
+                    _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
                 }
                 catch { /* Ignore any exceptions */ }
             });
