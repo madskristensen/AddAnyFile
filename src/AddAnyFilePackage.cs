@@ -1,14 +1,14 @@
-﻿using System;
+﻿using EnvDTE;
+using EnvDTE80;
+using Microsoft.VisualBasic;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using System;
 using System.ComponentModel.Design;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using EnvDTE;
-using EnvDTE80;
-using Microsoft.VisualBasic;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace MadsKristensen.AddAnyFile
 {
@@ -20,7 +20,7 @@ namespace MadsKristensen.AddAnyFile
     public sealed class AddAnyFilePackage : ExtensionPointPackage
     {
         private static DTE2 _dte;
-        public const string Version = "1.6";
+        public const string Version = "1.7.1";
 
         protected override void Initialize()
         {
@@ -200,8 +200,11 @@ namespace MadsKristensen.AddAnyFile
             {
                 try
                 {
-                    _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
-                    _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
+                    if (_dte.Version != "11.0") // This errors in VS2012 for some reason.
+                    {
+                        _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
+                        _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
+                    }
                 }
                 catch { /* Ignore any exceptions */ }
             });
