@@ -10,5 +10,5 @@ before_build:
 build_script:
   - msbuild /p:configuration=Release /p:DeployExtension=false /p:ZipPackageCompressionLevel=normal /v:m
 
-after_build:
+after_test:
   - ps: Vsix-PushArtifacts -publishToGallery
