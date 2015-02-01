@@ -20,7 +20,7 @@ namespace MadsKristensen.AddAnyFile
     public sealed class AddAnyFilePackage : ExtensionPointPackage
     {
         private static DTE2 _dte;
-        public const string Version = "1.7.1";
+        public const string Version = "1.9";
 
         protected override void Initialize()
         {
