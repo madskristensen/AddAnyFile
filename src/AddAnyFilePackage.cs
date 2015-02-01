@@ -1,14 +1,14 @@
-﻿using EnvDTE;
-using EnvDTE80;
-using Microsoft.VisualBasic;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using System;
+﻿using System;
 using System.ComponentModel.Design;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using EnvDTE;
+using EnvDTE80;
+using Microsoft.VisualBasic;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace MadsKristensen.AddAnyFile
 {
@@ -61,7 +61,7 @@ namespace MadsKristensen.AddAnyFile
 
                 try
                 {
-                    ProjectItem projectItem = AddFileToActiveProject(file);
+                    AddFileToActiveProject(file);
                     Window window = _dte.ItemOperations.OpenFile(file);
 
                     // Move cursor into position
@@ -162,34 +162,35 @@ namespace MadsKristensen.AddAnyFile
             return null;
         }
 
-        private static ProjectItem AddFileToActiveProject(string fileName)
+        private static void AddFileToActiveProject(string fileName)
         {
             Project project = GetActiveProject();
 
-            if (project == null)
-                return null;
+            if (project == null || project.Kind == "{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") // ASP.NET 5 projects
+                return;
 
             string projectFilePath = project.Properties.Item("FullPath").Value.ToString();
             string projectDirPath = Path.GetDirectoryName(projectFilePath);
 
             if (!fileName.StartsWith(projectDirPath, StringComparison.OrdinalIgnoreCase))
-                return null;
+                return;
 
-            return project.ProjectItems.AddFromFile(fileName);
+            project.ProjectItems.AddFromFile(fileName);
         }
 
         public static Project GetActiveProject()
         {
-            try
-            {
-                Array activeSolutionProjects = _dte.ActiveSolutionProjects as Array;
+			try
+			{
+				Array activeSolutionProjects = _dte.ActiveSolutionProjects as Array;
 
-                if (activeSolutionProjects != null && activeSolutionProjects.Length > 0)
-                    return activeSolutionProjects.GetValue(0) as Project;
-            }
-            catch (Exception)
-            {
-            }
+				if (activeSolutionProjects != null && activeSolutionProjects.Length > 0)
+					return activeSolutionProjects.GetValue(0) as Project;
+			}
+			catch (Exception)
+			{
+				// Pass through and return null
+			}
 
             return null;
         }
