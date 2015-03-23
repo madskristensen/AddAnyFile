@@ -48,12 +48,24 @@ namespace MadsKristensen.AddAnyFile
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
                 return;
 
-            string input = PromptForFileName(folder);
+            string input = PromptForFileName(folder).TrimStart('/', '\\').Replace("/", "\\");
 
             if (string.IsNullOrEmpty(input))
                 return;
 
             string file = Path.Combine(folder, input);
+            string dir = Path.GetDirectoryName(file);
+
+            try
+            {
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+            }
+            catch (Exception)
+            {
+                System.Windows.Forms.MessageBox.Show("Error creating the folder: " + dir);
+                return;
+            }
 
             if (!File.Exists(file))
             {
@@ -180,17 +192,17 @@ namespace MadsKristensen.AddAnyFile
 
         public static Project GetActiveProject()
         {
-			try
-			{
-				Array activeSolutionProjects = _dte.ActiveSolutionProjects as Array;
+            try
+            {
+                Array activeSolutionProjects = _dte.ActiveSolutionProjects as Array;
 
-				if (activeSolutionProjects != null && activeSolutionProjects.Length > 0)
-					return activeSolutionProjects.GetValue(0) as Project;
-			}
-			catch (Exception)
-			{
-				// Pass through and return null
-			}
+                if (activeSolutionProjects != null && activeSolutionProjects.Length > 0)
+                    return activeSolutionProjects.GetValue(0) as Project;
+            }
+            catch (Exception)
+            {
+                // Pass through and return null
+            }
 
             return null;
         }
