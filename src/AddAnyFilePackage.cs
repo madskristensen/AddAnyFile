@@ -144,7 +144,8 @@ namespace MadsKristensen.AddAnyFile
             }
             else if (project != null)
             {
-                Property prop = project.Properties.Item("FullPath");
+                Property prop = GetProjectRoot(project);
+
                 if (prop != null)
                 {
                     string value = prop.Value.ToString();
@@ -160,6 +161,31 @@ namespace MadsKristensen.AddAnyFile
                 }
             }
             return folder;
+        }
+
+        private static Property GetProjectRoot(Project project)
+        {
+            Property prop;
+
+            try
+            {
+                prop = project.Properties.Item("FullPath");
+            }
+            catch (ArgumentException)
+            {
+                try
+                {
+                    // MFC projects don't have FullPath, and there seems to be no way to query existence
+                    prop = project.Properties.Item("ProjectDirectory");
+                }
+                catch (ArgumentException)
+                {
+                    // Installer projects have a ProjectPath.
+                    prop = project.Properties.Item("ProjectPath");
+                }
+            }
+
+            return prop;
         }
 
         private static UIHierarchyItem GetSelectedItem()
@@ -181,7 +207,7 @@ namespace MadsKristensen.AddAnyFile
             if (project == null || project.Kind == "{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") // ASP.NET 5 projects
                 return;
 
-            string projectFilePath = project.Properties.Item("FullPath").Value.ToString();
+            string projectFilePath = GetProjectRoot(project).Value.ToString();
             string projectDirPath = Path.GetDirectoryName(projectFilePath);
 
             if (!fileName.StartsWith(projectDirPath, StringComparison.OrdinalIgnoreCase))
