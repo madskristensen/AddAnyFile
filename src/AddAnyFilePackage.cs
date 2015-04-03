@@ -124,6 +124,25 @@ namespace MadsKristensen.AddAnyFile
 
         private static string FindFolder(UIHierarchyItem item)
         {
+            Window2 window = _dte.ActiveWindow as Window2;
+
+            if (window != null && window.Type == vsWindowType.vsWindowTypeDocument)
+            {
+                // if a document is active, use the document's containing directory
+                Document doc = _dte.ActiveDocument;
+                if (doc != null && !string.IsNullOrEmpty(doc.FullName))
+                {
+                    ProjectItem docItem = _dte.Solution.FindProjectItem(doc.FullName);
+
+                    if (docItem != null)
+                    {
+                        string fileName = docItem.Properties.Item("FullPath").Value.ToString();
+                        if (File.Exists(fileName))
+                            return Path.GetDirectoryName(fileName);
+                    }
+                }
+            }
+
             string folder = null;
 
             ProjectItem projectItem = item.Object as ProjectItem;
