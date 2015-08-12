@@ -22,11 +22,9 @@ namespace MadsKristensen.AddAnyFile
 
             lblFolder.Content = string.Format("{0}/", folder);
 
-            Caption.MouseDown += delegate {DragMove();};
-
             Loaded += (s, e) =>
             {
-                imgTitle.Source = BitmapFrame.Create(new Uri("pack://application:,,,/AddAnyFile;component/Resources/icon.png", UriKind.RelativeOrAbsolute));
+                Icon = BitmapFrame.Create(new Uri("pack://application:,,,/AddAnyFile;component/Resources/icon.png", UriKind.RelativeOrAbsolute));
                 SetRandomTip();
 
                 txtName.Focus();
