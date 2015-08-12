@@ -18,11 +18,19 @@ or get the
 
 ![Add new file dialog](art/dialog.png)
 
+### Show the dialog
+
+A new button is added to the context menu in Solution Explorer.
+
+![Add new file dialog](art/menu.png)
+
+You can either click that button or use the keybord shortcut **Shift+F2**.
+
 ### Create folders
 
 Create additional folders for your file by using forward-slash to
 specify the structure.
 
 For example, by typing **scripts/test.js** in the dialog, the
-folder **scripts** is created if it doesn't exist and the file 
+folder **scripts** is created if it doesn't exist and the file
 **test.js** is then placed into it.
