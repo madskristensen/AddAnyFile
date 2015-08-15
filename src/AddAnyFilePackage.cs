@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using EnvDTE;
 using EnvDTE80;
-using Microsoft.VisualBasic;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -96,8 +95,6 @@ namespace MadsKristensen.AddAnyFile
         private static string PromptForFileName(string folder)
         {
             DirectoryInfo dir = new DirectoryInfo(folder);
-            //string message = "Please enter a file name. \r\rThe file will be placed in the folder '" + dir.Name + "'";
-            //return Interaction.InputBox(message, "File name", "file.txt");
             FileNameDialog dialog = new FileNameDialog(dir.Name);
             var result = dialog.ShowDialog();
             return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
@@ -105,7 +102,7 @@ namespace MadsKristensen.AddAnyFile
 
         private static int WriteFile(string file)
         {
-            Encoding encoding = Encoding.UTF8;
+            Encoding encoding = new UTF8Encoding(false);
             string extension = Path.GetExtension(file);
 
             string assembly = Assembly.GetExecutingAssembly().Location;
