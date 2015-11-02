@@ -1,11 +1,11 @@
 ﻿using System;
 using System.ComponentModel.Design;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
+using System.Windows;
 using EnvDTE;
 using EnvDTE80;
+using MadsKristensen.AddAnyFile.Templates;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -52,43 +52,27 @@ namespace MadsKristensen.AddAnyFile
             if (string.IsNullOrEmpty(input))
                 return;
 
-            string file = Path.Combine(folder, input);
-            string dir = Path.GetDirectoryName(file);
+            var templates = new TemplateMap();
+            templates.LoadDefaultMappings();
+
+            Project project = GetActiveProject();
+
+            if (project == null)
+                return;
 
             try
             {
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
+                var itemManager = new ProjectItemManager(_dte, templates);
+                var creator = itemManager.GetCreator(folder, input);
+                creator.Create(project);
+
+                string fullPath = Path.Combine(folder, input);
+
+                SelectCurrentItem();
             }
-            catch (Exception)
+             catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show("Error creating the folder: " + dir);
-                return;
-            }
-
-            if (!File.Exists(file))
-            {
-                int position = WriteFile(file);
-
-                try
-                {
-                    AddFileToActiveProject(file);
-                    Window window = _dte.ItemOperations.OpenFile(file);
-
-                    // Move cursor into position
-                    if (position > 0)
-                    {
-                        TextSelection selection = (TextSelection)window.Selection;
-                        selection.CharRight(Count: position - 1);
-                    }
-
-                    SelectCurrentItem();
-                }
-                catch { /* Something went wrong. What should we do about it? */ }
-            }
-            else
-            {
-                System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
+                MessageBox.Show(ex.Message, "Cannot Add New File", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -98,28 +82,6 @@ namespace MadsKristensen.AddAnyFile
             FileNameDialog dialog = new FileNameDialog(dir.Name);
             var result = dialog.ShowDialog();
             return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
-        }
-
-        private static int WriteFile(string file)
-        {
-            Encoding encoding = new UTF8Encoding(false);
-            string extension = Path.GetExtension(file);
-
-            string assembly = Assembly.GetExecutingAssembly().Location;
-            string folder = Path.GetDirectoryName(assembly).ToLowerInvariant();
-            string template = Path.Combine(folder, "Templates\\", extension);
-
-            if (File.Exists(template))
-            {
-                string content = File.ReadAllText(template);
-                int index = content.IndexOf('$');
-                content = content.Remove(index, 1);
-                File.WriteAllText(file, content, encoding);
-                return index;
-            }
-
-            File.WriteAllText(file, string.Empty, encoding);
-            return 0;
         }
 
         private static string FindFolder(UIHierarchyItem item)
@@ -182,31 +144,6 @@ namespace MadsKristensen.AddAnyFile
             return folder;
         }
 
-        private static Property GetProjectRoot(Project project)
-        {
-            Property prop;
-
-            try
-            {
-                prop = project.Properties.Item("FullPath");
-            }
-            catch (ArgumentException)
-            {
-                try
-                {
-                    // MFC projects don't have FullPath, and there seems to be no way to query existence
-                    prop = project.Properties.Item("ProjectDirectory");
-                }
-                catch (ArgumentException)
-                {
-                    // Installer projects have a ProjectPath.
-                    prop = project.Properties.Item("ProjectPath");
-                }
-            }
-
-            return prop;
-        }
-
         private static UIHierarchyItem GetSelectedItem()
         {
             var items = (Array)_dte.ToolWindows.SolutionExplorer.SelectedItems;
@@ -217,22 +154,6 @@ namespace MadsKristensen.AddAnyFile
             }
 
             return null;
-        }
-
-        private static void AddFileToActiveProject(string fileName)
-        {
-            Project project = GetActiveProject();
-
-            if (project == null || project.Kind == "{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") // ASP.NET 5 projects
-                return;
-
-            string projectFilePath = GetProjectRoot(project).Value.ToString();
-            string projectDirPath = Path.GetDirectoryName(projectFilePath);
-
-            if (!fileName.StartsWith(projectDirPath, StringComparison.OrdinalIgnoreCase))
-                return;
-
-            project.ProjectItems.AddFromFile(fileName);
         }
 
         public static Project GetActiveProject()
@@ -266,6 +187,31 @@ namespace MadsKristensen.AddAnyFile
                 }
                 catch { /* Ignore any exceptions */ }
             });
+        }
+
+        public static Property GetProjectRoot(Project project)
+        {
+            Property prop;
+
+            try
+            {
+                prop = project.Properties.Item("FullPath");
+            }
+            catch (ArgumentException)
+            {
+                try
+                {
+                    // MFC projects don't have FullPath, and there seems to be no way to query existence
+                    prop = project.Properties.Item("ProjectDirectory");
+                }
+                catch (ArgumentException)
+                {
+                    // Installer projects have a ProjectPath.
+                    prop = project.Properties.Item("ProjectPath");
+                }
+            }
+
+            return prop;
         }
     }
 }
