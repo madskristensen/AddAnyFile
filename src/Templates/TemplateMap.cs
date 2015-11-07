@@ -1,16 +1,18 @@
 ﻿namespace MadsKristensen.AddAnyFile.Templates
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Runtime.Serialization;
+    using System.Runtime.Serialization.Json;
     using System.Text.RegularExpressions;
-    using Newtonsoft.Json;
-    using M = TemplateMap.TemplateMapping;
+    using M = TemplateMapping;
 
     /// <summary>
     /// Map of input patterns and their corresponding VS Templates. Ideally, these patterns would be configurable via the 
     /// Visual Studio Options dialog box.
     /// </summary>
-    class TemplateMap : List<TemplateMap.TemplateMapping>
+    public class TemplateMap : List<TemplateMapping>
     {
         /// <summary>
         /// Loads the default mappings.
@@ -49,10 +51,13 @@
             {
                 try
                 {
-                    string contents = File.ReadAllText(path);
-                    return JsonConvert.DeserializeObject<TemplateMap>(contents);
+                    using (var fileStream = File.OpenRead(path))
+                    {
+                        var deserializer = new DataContractJsonSerializer(typeof(TemplateMap));
+                        return deserializer.ReadObject(fileStream) as TemplateMap;
+                    }
                 }
-                catch (Newtonsoft.Json.JsonSerializationException e)
+                catch (Exception e)
                 {
                     AddAnyFilePackage.LogToOutputPane(string.Concat(
                         "There was error loading the mappings from: ",
@@ -68,9 +73,16 @@
         {
             try
             {
-                var json = JsonConvert.SerializeObject(map, Formatting.Indented);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
-                File.WriteAllText(path, json, System.Text.Encoding.UTF8);
+                using (var fileStream = File.OpenWrite(path))
+                {
+                    var serizlier = new DataContractJsonSerializer(
+                                        typeof(TemplateMap),
+                                        new DataContractJsonSerializerSettings() {
+                                            UseSimpleDictionaryFormat = true
+                                        });
+                    serizlier.WriteObject(fileStream, map);
+                }
             }
             catch (System.Exception e)
             {
@@ -85,50 +97,6 @@
 
         public TemplateMap()
         {
-        }
-
-        public class TemplateMapping
-        {
-            public string Pattern { get; set; }
-            public string Language { get; set; }
-            public string TemplateName { get; set; }
-
-            private Regex _patternExpression;
-            private readonly object _lock = new object();
-
-            public Regex GetPatternExpression()
-            {
-                if (_patternExpression == null)
-                    lock (_lock)
-                        if (_patternExpression == null)
-                        {
-                            _patternExpression = CreateExpression(Pattern);
-
-                        }
-                return _patternExpression;
-            }
-
-            private static Regex CreateExpression(string expression)
-            {
-                return new Regex(expression, RegexOptions.Compiled);
-            }
-
-            public TemplateMapping()
-            {
-            }
-
-            public TemplateMapping(string pattern, string language, string templateName)
-            {
-                this.Pattern = pattern;
-                this.Language = language;
-                this.TemplateName = templateName;
-                this._patternExpression = CreateExpression(pattern);                
-            }
-
-            public override string ToString()
-            {
-                return string.Concat(Pattern, " => ", Language, "/", TemplateName);
-            }
         }
     }
 }

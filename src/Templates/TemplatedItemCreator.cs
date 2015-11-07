@@ -9,13 +9,13 @@
 
     class TemplatedItemCreator : IItemCreator
     {
-        private readonly TemplateMap.TemplateMapping _template;
+        private readonly TemplateMapping _template;
         private readonly Solution2 _solution;
         private readonly  string _rootPath;
         private readonly string[] _relativePath;
 
         public TemplatedItemCreator(Solution2 solution, 
-                TemplateMap.TemplateMapping template, 
+                TemplateMapping template, 
                 string rootPath,
                 string[] relativePath)
         {

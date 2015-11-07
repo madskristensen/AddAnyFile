@@ -29,7 +29,7 @@ namespace MadsKristensen.AddAnyFile.Templates
             }
         }
 
-        private TemplateMap.TemplateMapping GetTemplate(string itemName, out string suggestedFileName)
+        private TemplateMapping GetTemplate(string itemName, out string suggestedFileName)
         {
             Match match;
             foreach (var mapping in _templateMap)
