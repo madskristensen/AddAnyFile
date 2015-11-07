@@ -9,20 +9,20 @@
 
     class TemplatedItemCreator : IItemCreator
     {
-        private readonly string _fileName;
-        private readonly TemplateMap.TemplateReference _template;
+        private readonly TemplateMap.TemplateMapping _template;
         private readonly Solution2 _solution;
-        private readonly string _fullName;
+        private readonly  string _rootPath;
+        private readonly string[] _relativePath;
 
         public TemplatedItemCreator(Solution2 solution, 
-                TemplateMap.TemplateReference template, 
-                string fileName,
-                string givenName)
+                TemplateMap.TemplateMapping template, 
+                string rootPath,
+                string[] relativePath)
         {
             this._solution = solution;
             this._template = template;
-            this._fileName = fileName;
-            this._fullName = givenName;
+            this._rootPath = rootPath;
+            this._relativePath = relativePath;
         }
 
         public void Create(Project project)
@@ -30,8 +30,8 @@
             string templatePath = _solution.GetProjectItemTemplate(_template.TemplateName, _template.Language);
             string ext = GetTargetExtension(templatePath);
 
-            string itemName = System.IO.Path.GetFileName(_fileName);
-            if (!_fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+            string itemName = _relativePath[_relativePath.Length - 1];
+            if (!itemName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
                 itemName += ext;
 
             var parent = GetItemParent(project);
@@ -40,31 +40,20 @@
 
         private ProjectItems GetItemParent(Project project)
         {
-            string[] directories = GetRelativePath(project, _fullName).Split('\\');
-
             var parent = project.ProjectItems;
             Func<string, ProjectItems, ProjectItem> existingItem = (name, items) => items
                                                         .Cast<ProjectItem>()
                                                         .FirstOrDefault(p => p.Name == name);
 
-            for (int i = 0; i < directories.Length - 1; i++)
+            for (int i = 0; i < _relativePath.Length - 1; i++)
             {
-                var p = existingItem(directories[i], parent);
+                var p = existingItem(_relativePath[i], parent);
                 if (p == null)
-                    parent = parent.AddFolder(directories[i]).ProjectItems;
+                    parent = parent.AddFolder(_relativePath[i]).ProjectItems;
                 else
                     parent = p.ProjectItems;
             }
             return parent;
-        }
-
-        private static string GetRelativePath(Project project, string fullName)
-        {
-            string projectPath = Path.GetDirectoryName(project.FullName);
-            if (fullName.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase))
-                return fullName.Substring(projectPath.Length + 1);
-            else
-                return fullName;
         }
 
         private string GetTargetExtension(string templateFile)

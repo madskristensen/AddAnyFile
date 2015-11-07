@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.Design;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using EnvDTE;
@@ -20,10 +21,16 @@ namespace MadsKristensen.AddAnyFile
     {
         private static DTE2 _dte;
         public const string Version = "1.9";
+        private static TemplateMap _templates;
+        private static readonly object _templateLock = new object();
+
+        public static IServiceProvider ServiceProvider { get; private set; }
 
         protected override void Initialize()
         {
             _dte = GetService(typeof(DTE)) as DTE2;
+            ServiceProvider = this;
+
             base.Initialize();
 
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
@@ -52,28 +59,53 @@ namespace MadsKristensen.AddAnyFile
             if (string.IsNullOrEmpty(input))
                 return;
 
-            var templates = new TemplateMap();
-            templates.LoadDefaultMappings();
+            TemplateMap templates = GetTemplateMap();
 
             Project project = GetActiveProject();
-
             if (project == null)
                 return;
+
+            string projectPath = Path.GetDirectoryName(project.FullName);
+            string relativePath;
+            if (folder.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && folder.Length > projectPath.Length)
+                relativePath = Path.Combine(folder.Substring(projectPath.Length + 1), input);
+            else
+                relativePath = input;
 
             try
             {
                 var itemManager = new ProjectItemManager(_dte, templates);
-                var creator = itemManager.GetCreator(folder, input);
+                var creator = itemManager.GetCreator(folder, relativePath);
                 creator.Create(project);
-
-                string fullPath = Path.Combine(folder, input);
 
                 SelectCurrentItem();
             }
-             catch (Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Cannot Add New File", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private static TemplateMap GetTemplateMap()
+        {
+            TemplateMap templates = null;
+            if (_templates == null)
+                lock (_templateLock)
+                    if (_templates == null)
+                    {
+                        string path = Path.Combine(
+                                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                                        "VisualStudio.AddAnyFile",
+                                        "Patterns.json");
+                        if ((templates = TemplateMap.LoadFromFile(path)) == null)
+                        {
+                            templates = new TemplateMap();
+                            templates.LoadDefaultMappings();
+                            TemplateMap.WriteToFile(templates, path);
+                        }
+                        _templates = templates;
+                    }
+            return _templates;
         }
 
         private static string PromptForFileName(string folder)
@@ -82,6 +114,15 @@ namespace MadsKristensen.AddAnyFile
             FileNameDialog dialog = new FileNameDialog(dir.Name);
             var result = dialog.ShowDialog();
             return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
+        }
+
+        private static string GetRelativePath(Project project, string fullName)
+        {
+            string projectPath = Path.GetDirectoryName(project.FullName);
+            if (fullName.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase))
+                return fullName.Substring(projectPath.Length + 1);
+            else
+                return fullName;
         }
 
         private static string FindFolder(UIHierarchyItem item)
@@ -212,6 +253,18 @@ namespace MadsKristensen.AddAnyFile
             }
 
             return prop;
+        }
+
+        public static void LogToOutputPane(string message)
+        {
+            EnvDTE.Window window = _dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
+            OutputWindow outputWindow = (OutputWindow)window.Object;
+            var outputPane = outputWindow.OutputWindowPanes.Cast<OutputWindowPane>().FirstOrDefault(p => p.Name == "Debug");
+            if (outputPane != null)
+            {
+                outputPane.Activate();
+                outputPane.OutputString(message);
+            }
         }
     }
 }

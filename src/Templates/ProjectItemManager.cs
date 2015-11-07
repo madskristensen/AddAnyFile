@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.IO;
+using System.Text.RegularExpressions;
 using EnvDTE80;
 
 namespace MadsKristensen.AddAnyFile.Templates
@@ -8,32 +9,34 @@ namespace MadsKristensen.AddAnyFile.Templates
         private readonly TemplateMap _templateMap;
         private readonly DTE2 _dte;
 
-        public IItemCreator GetCreator(string rootFolder, string itemName)
+        public IItemCreator GetCreator(string rootFolder, string relativePath)
         {
+            var path = relativePath.Split(Path.DirectorySeparatorChar);
             string fileName;
-            var template = GetTemplate(itemName, out fileName);
+            var template = GetTemplate(path[path.Length-1], out fileName);
 
             if (template != null)
             {
+                path[path.Length - 1] = fileName;
                 return new TemplatedItemCreator((Solution2)_dte.Solution, 
                     template, 
-                    fileName, 
-                    System.IO.Path.Combine(rootFolder + itemName));
+                    rootFolder,
+                    path);
             }
             else
             {
-                return new NonTemplatedItemCreator(_dte, rootFolder, itemName);
+                return new NonTemplatedItemCreator(_dte, rootFolder, relativePath);
             }
         }
 
-        private TemplateMap.TemplateReference GetTemplate(string itemName, out string suggestedFileName)
+        private TemplateMap.TemplateMapping GetTemplate(string itemName, out string suggestedFileName)
         {
             Match match;
-            foreach (var key in _templateMap.Keys)
-                if ((match = key.Match(itemName)).Success && match.Groups.Count > 0)
+            foreach (var mapping in _templateMap)
+                if ((match = mapping.GetPatternExpression().Match(itemName)).Success && match.Groups.Count > 0)
                 {
                     suggestedFileName = match.Groups["name"].Value;
-                    return _templateMap[key];
+                    return mapping;
                 }
 
             suggestedFileName = null;
