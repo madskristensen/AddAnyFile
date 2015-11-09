@@ -1,11 +1,12 @@
 ﻿using System;
 using System.ComponentModel.Design;
 using System.IO;
-using System.Reflection;
+using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
+using System.Windows;
 using EnvDTE;
 using EnvDTE80;
+using MadsKristensen.AddAnyFile.Templates;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -20,10 +21,16 @@ namespace MadsKristensen.AddAnyFile
     {
         private static DTE2 _dte;
         public const string Version = "1.9";
+        private static TemplateMap _templates;
+        private static readonly object _templateLock = new object();
+
+        public static IServiceProvider ServiceProvider { get; private set; }
 
         protected override void Initialize()
         {
             _dte = GetService(typeof(DTE)) as DTE2;
+            ServiceProvider = this;
+
             base.Initialize();
 
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
@@ -47,49 +54,60 @@ namespace MadsKristensen.AddAnyFile
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
                 return;
 
+            // See if the user has a valid selection on the Solution Tree and avoid prompting the user
+            // for a file name.
+            Project project = GetActiveProject();
+            if (project == null)
+                return;
+
             string input = PromptForFileName(folder).TrimStart('/', '\\').Replace("/", "\\");
 
             if (string.IsNullOrEmpty(input))
                 return;
 
-            string file = Path.Combine(folder, input);
-            string dir = Path.GetDirectoryName(file);
+            TemplateMap templates = GetTemplateMap();
+
+            string projectPath = Path.GetDirectoryName(project.FullName);
+            string relativePath;
+            if (folder.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && folder.Length > projectPath.Length)
+                relativePath = Path.Combine(folder.Substring(projectPath.Length + 1), input);
+            else
+                relativePath = input;
 
             try
             {
-                if (!Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
+                var itemManager = new ProjectItemManager(_dte, templates);
+                var creator = itemManager.GetCreator(folder, relativePath);
+                creator.Create(project);
+
+                SelectCurrentItem();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                System.Windows.Forms.MessageBox.Show("Error creating the folder: " + dir);
-                return;
+                MessageBox.Show(ex.Message, "Cannot Add New File", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
 
-            if (!File.Exists(file))
-            {
-                int position = WriteFile(file);
-
-                try
-                {
-                    AddFileToActiveProject(file);
-                    Window window = _dte.ItemOperations.OpenFile(file);
-
-                    // Move cursor into position
-                    if (position > 0)
+        private static TemplateMap GetTemplateMap()
+        {
+            TemplateMap templates = null;
+            if (_templates == null)
+                lock (_templateLock)
+                    if (_templates == null)
                     {
-                        TextSelection selection = (TextSelection)window.Selection;
-                        selection.CharRight(Count: position - 1);
+                        string path = Path.Combine(
+                                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                                        "VisualStudio.AddAnyFile",
+                                        "Patterns.json");
+                        if ((templates = TemplateMap.LoadFromFile(path)) == null)
+                        {
+                            templates = new TemplateMap();
+                            templates.LoadDefaultMappings();
+                            TemplateMap.WriteToFile(templates, path);
+                        }
+                        _templates = templates;
                     }
-
-                    SelectCurrentItem();
-                }
-                catch { /* Something went wrong. What should we do about it? */ }
-            }
-            else
-            {
-                System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
-            }
+            return _templates;
         }
 
         private static string PromptForFileName(string folder)
@@ -100,26 +118,13 @@ namespace MadsKristensen.AddAnyFile
             return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
         }
 
-        private static int WriteFile(string file)
+        private static string GetRelativePath(Project project, string fullName)
         {
-            Encoding encoding = new UTF8Encoding(false);
-            string extension = Path.GetExtension(file);
-
-            string assembly = Assembly.GetExecutingAssembly().Location;
-            string folder = Path.GetDirectoryName(assembly).ToLowerInvariant();
-            string template = Path.Combine(folder, "Templates\\", extension);
-
-            if (File.Exists(template))
-            {
-                string content = File.ReadAllText(template);
-                int index = content.IndexOf('$');
-                content = content.Remove(index, 1);
-                File.WriteAllText(file, content, encoding);
-                return index;
-            }
-
-            File.WriteAllText(file, string.Empty, encoding);
-            return 0;
+            string projectPath = Path.GetDirectoryName(project.FullName);
+            if (fullName.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase))
+                return fullName.Substring(projectPath.Length + 1);
+            else
+                return fullName;
         }
 
         private static string FindFolder(UIHierarchyItem item)
@@ -182,31 +187,6 @@ namespace MadsKristensen.AddAnyFile
             return folder;
         }
 
-        private static Property GetProjectRoot(Project project)
-        {
-            Property prop;
-
-            try
-            {
-                prop = project.Properties.Item("FullPath");
-            }
-            catch (ArgumentException)
-            {
-                try
-                {
-                    // MFC projects don't have FullPath, and there seems to be no way to query existence
-                    prop = project.Properties.Item("ProjectDirectory");
-                }
-                catch (ArgumentException)
-                {
-                    // Installer projects have a ProjectPath.
-                    prop = project.Properties.Item("ProjectPath");
-                }
-            }
-
-            return prop;
-        }
-
         private static UIHierarchyItem GetSelectedItem()
         {
             var items = (Array)_dte.ToolWindows.SolutionExplorer.SelectedItems;
@@ -217,22 +197,6 @@ namespace MadsKristensen.AddAnyFile
             }
 
             return null;
-        }
-
-        private static void AddFileToActiveProject(string fileName)
-        {
-            Project project = GetActiveProject();
-
-            if (project == null || project.Kind == "{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") // ASP.NET 5 projects
-                return;
-
-            string projectFilePath = GetProjectRoot(project).Value.ToString();
-            string projectDirPath = Path.GetDirectoryName(projectFilePath);
-
-            if (!fileName.StartsWith(projectDirPath, StringComparison.OrdinalIgnoreCase))
-                return;
-
-            project.ProjectItems.AddFromFile(fileName);
         }
 
         public static Project GetActiveProject()
@@ -266,6 +230,43 @@ namespace MadsKristensen.AddAnyFile
                 }
                 catch { /* Ignore any exceptions */ }
             });
+        }
+
+        public static Property GetProjectRoot(Project project)
+        {
+            Property prop;
+
+            try
+            {
+                prop = project.Properties.Item("FullPath");
+            }
+            catch (ArgumentException)
+            {
+                try
+                {
+                    // MFC projects don't have FullPath, and there seems to be no way to query existence
+                    prop = project.Properties.Item("ProjectDirectory");
+                }
+                catch (ArgumentException)
+                {
+                    // Installer projects have a ProjectPath.
+                    prop = project.Properties.Item("ProjectPath");
+                }
+            }
+
+            return prop;
+        }
+
+        public static void LogToOutputPane(string message)
+        {
+            EnvDTE.Window window = _dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
+            OutputWindow outputWindow = (OutputWindow)window.Object;
+            var outputPane = outputWindow.OutputWindowPanes.Cast<OutputWindowPane>().FirstOrDefault(p => p.Name == "Debug");
+            if (outputPane != null)
+            {
+                outputPane.Activate();
+                outputPane.OutputString(message);
+            }
         }
     }
 }
