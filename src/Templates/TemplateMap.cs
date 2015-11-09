@@ -3,9 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Runtime.Serialization;
     using System.Runtime.Serialization.Json;
-    using System.Text.RegularExpressions;
     using M = TemplateMapping;
 
     /// <summary>
@@ -21,8 +19,8 @@
         {
             this.Add(new M(@"^c\:(?<name>.*)", "CSharp", "Class"));
             this.Add(new M(@"^i\:(?<name>.*)", "CSharp", "Interface"));
-            this.Add(new M(@"^(?<name>I.*)\.cs$", "CSharp", "Interface"));
-            this.Add(new M(@"^(?<name>I.*)\.vb$", "VisualBasic", "Interface"));
+            this.Add(new M(@"^(?<name>I[A-Z].*)\.cs$", "CSharp", "Interface"));
+            this.Add(new M(@"^(?<name>I[A-Z].*)\.vb$", "VisualBasic", "Interface"));
             /* NOTE: With VS 2015 Community Edition, CodeFile.cs was not replacing the $rootnamespace$ tag.
              * If this happens, open the CodeFile.vstemplate file 
              * (e.g. in C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\ItemTemplates\CSharp\Code\1033\CodeFile\CodeFile.vstemplate)

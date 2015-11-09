@@ -54,16 +54,18 @@ namespace MadsKristensen.AddAnyFile
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
                 return;
 
+            // See if the user has a valid selection on the Solution Tree and avoid prompting the user
+            // for a file name.
+            Project project = GetActiveProject();
+            if (project == null)
+                return;
+
             string input = PromptForFileName(folder).TrimStart('/', '\\').Replace("/", "\\");
 
             if (string.IsNullOrEmpty(input))
                 return;
 
             TemplateMap templates = GetTemplateMap();
-
-            Project project = GetActiveProject();
-            if (project == null)
-                return;
 
             string projectPath = Path.GetDirectoryName(project.FullName);
             string relativePath;
