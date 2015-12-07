@@ -60,7 +60,11 @@ namespace MadsKristensen.AddAnyFile
             if (project == null)
                 return;
 
-            string input = PromptForFileName(folder).TrimStart('/', '\\').Replace("/", "\\");
+            string defaultExt = GetProjectDefaultExtension(project);
+            string input = PromptForFileName(
+                                folder,
+                                defaultExt
+                            ).TrimStart('/', '\\').Replace("/", "\\");
 
             if (string.IsNullOrEmpty(input))
                 return;
@@ -88,6 +92,19 @@ namespace MadsKristensen.AddAnyFile
             }
         }
 
+        private static string GetProjectDefaultExtension(Project project)
+        {
+            switch (project.CodeModel.Language)
+            {
+                case CodeModelLanguageConstants.vsCMLanguageCSharp:
+                    return ".cs";
+                case CodeModelLanguageConstants.vsCMLanguageVB:
+                    return ".vb";
+                default:
+                    return string.Empty;
+            }
+        }
+
         private static TemplateMap GetTemplateMap()
         {
             TemplateMap templates = null;
@@ -110,10 +127,10 @@ namespace MadsKristensen.AddAnyFile
             return _templates;
         }
 
-        private static string PromptForFileName(string folder)
+        private static string PromptForFileName(string folder, string defaultExt)
         {
             DirectoryInfo dir = new DirectoryInfo(folder);
-            FileNameDialog dialog = new FileNameDialog(dir.Name);
+            FileNameDialog dialog = new FileNameDialog(dir.Name, defaultExt);
             var result = dialog.ShowDialog();
             return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
         }

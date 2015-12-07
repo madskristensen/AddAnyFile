@@ -9,20 +9,20 @@ namespace MadsKristensen.AddAnyFile.Templates
 {
     class NonTemplatedItemCreator : IItemCreator
     {
-        private readonly string _itemName;
+        private readonly string[] _relativePath;
         private readonly string _folder;
         private readonly DTE2 _dte;
 
-        public NonTemplatedItemCreator(DTE2 dte, string rootFolder, string itemName)
+        public NonTemplatedItemCreator(DTE2 dte, string rootFolder, string[] relativePath)
         {
-            this._itemName = itemName;
+            this._relativePath = relativePath;
             this._folder = rootFolder;
             this._dte = dte;
         }
 
         public void Create(Project project)
         {
-            string file = Path.Combine(_folder, _itemName);
+            string file = Path.Combine(_folder, _relativePath[_relativePath.Length - 1]);
             string dir = Path.GetDirectoryName(file);
 
             try

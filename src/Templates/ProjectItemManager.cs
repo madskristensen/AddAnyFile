@@ -25,7 +25,7 @@ namespace MadsKristensen.AddAnyFile.Templates
             }
             else
             {
-                return new NonTemplatedItemCreator(_dte, rootFolder, relativePath);
+                return new NonTemplatedItemCreator(_dte, rootFolder, path);
             }
         }
 
