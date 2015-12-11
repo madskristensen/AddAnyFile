@@ -252,7 +252,7 @@ namespace MadsKristensen.AddAnyFile
 
             if (fileName.EndsWith("__dummy__"))
             {
-                pi.Remove();
+                pi.Delete();
             }
         }
 
