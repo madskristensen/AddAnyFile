@@ -66,29 +66,45 @@ namespace MadsKristensen.AddAnyFile
                 return;
             }
 
-            if (!File.Exists(file))
+            if (file.EndsWith("\\")) // create a folder
             {
-                int position = WriteFile(file);
+                file = Path.Combine( file, "__dummy__" );
 
-                try
+                if (!File.Exists(file))
                 {
-                    AddFileToActiveProject(file);
-                    Window window = _dte.ItemOperations.OpenFile(file);
-
-                    // Move cursor into position
-                    if (position > 0)
-                    {
-                        TextSelection selection = (TextSelection)window.Selection;
-                        selection.CharRight(Count: position - 1);
-                    }
-
-                    SelectCurrentItem();
+                    File.Create(file).Dispose();
                 }
-                catch { /* Something went wrong. What should we do about it? */ }
+
+                AddFileToActiveProject(file);
+
+                File.Delete(file);
             }
             else
             {
-                System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
+                if (!File.Exists(file))
+                {
+                    int position = WriteFile(file);
+
+                    try
+                    {
+                        AddFileToActiveProject(file);
+                        Window window = _dte.ItemOperations.OpenFile(file);
+
+                        // Move cursor into position
+                        if (position > 0)
+                        {
+                            TextSelection selection = (TextSelection)window.Selection;
+                            selection.CharRight(Count: position - 1);
+                        }
+
+                        SelectCurrentItem();
+                    }
+                    catch { /* Something went wrong. What should we do about it? */ }
+                }
+                else
+                {
+                    System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
+                }
             }
         }
 
@@ -232,7 +248,12 @@ namespace MadsKristensen.AddAnyFile
             if (!fileName.StartsWith(projectDirPath, StringComparison.OrdinalIgnoreCase))
                 return;
 
-            project.ProjectItems.AddFromFile(fileName);
+            var pi = project.ProjectItems.AddFromFile(fileName);
+
+            if (fileName.EndsWith("__dummy__"))
+            {
+                pi.Remove();
+            }
         }
 
         public static Project GetActiveProject()
