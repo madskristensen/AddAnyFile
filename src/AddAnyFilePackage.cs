@@ -118,7 +118,7 @@ namespace MadsKristensen.AddAnyFile
 
         private static int WriteFile(string file)
         {
-            Encoding encoding = new UTF8Encoding(false);
+            Encoding encoding = new UTF8Encoding(true);
             string extension = Path.GetExtension(file);
 
             string assembly = Assembly.GetExecutingAssembly().Location;
