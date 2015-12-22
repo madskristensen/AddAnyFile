@@ -20,7 +20,6 @@ namespace MadsKristensen.AddAnyFile.Templates
                 path[path.Length - 1] = fileName;
                 return new TemplatedItemCreator((Solution2)_dte.Solution, 
                     template, 
-                    rootFolder,
                     path);
             }
             else

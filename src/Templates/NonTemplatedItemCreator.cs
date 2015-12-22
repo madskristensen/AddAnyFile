@@ -22,7 +22,7 @@ namespace MadsKristensen.AddAnyFile.Templates
 
         public void Create(Project project)
         {
-            string file = Path.Combine(_folder, _relativePath[_relativePath.Length - 1]);
+            string file = Path.Combine(_folder, Path.Combine(_relativePath));
             string dir = Path.GetDirectoryName(file);
 
             try

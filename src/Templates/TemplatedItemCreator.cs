@@ -1,7 +1,6 @@
 ﻿namespace MadsKristensen.AddAnyFile.Templates
 {
     using System;
-    using System.IO;
     using System.Linq;
     using System.Xml.Linq;
     using EnvDTE;
@@ -11,17 +10,14 @@
     {
         private readonly TemplateMapping _template;
         private readonly Solution2 _solution;
-        private readonly  string _rootPath;
         private readonly string[] _relativePath;
 
         public TemplatedItemCreator(Solution2 solution, 
                 TemplateMapping template, 
-                string rootPath,
                 string[] relativePath)
         {
             this._solution = solution;
             this._template = template;
-            this._rootPath = rootPath;
             this._relativePath = relativePath;
         }
 

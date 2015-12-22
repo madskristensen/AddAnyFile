@@ -20,7 +20,7 @@ namespace MadsKristensen.AddAnyFile
     public sealed class AddAnyFilePackage : ExtensionPointPackage
     {
         private static DTE2 _dte;
-        public const string Version = "1.9";
+        public const string Version = "2.2";
         private static TemplateMap _templates;
         private static readonly object _templateLock = new object();
 
@@ -74,14 +74,20 @@ namespace MadsKristensen.AddAnyFile
             string projectPath = Path.GetDirectoryName(project.FullName);
             string relativePath;
             if (folder.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && folder.Length > projectPath.Length)
-                relativePath = Path.Combine(folder.Substring(projectPath.Length + 1), input);
+            {
+                relativePath = CombinePaths(folder.Substring(projectPath.Length + 1), input);
+                // I'm intentionally avoiding the use of Path.Combine because input may contain pattern characters
+                // such as ':' which will cause Path.Combine to handle differently. We simply need a string concat here.
+            }
             else
+            {
                 relativePath = input;
+            }
 
             try
             {
                 var itemManager = new ProjectItemManager(_dte, templates);
-                var creator = itemManager.GetCreator(folder, relativePath);
+                var creator = itemManager.GetCreator(projectPath, relativePath);
                 creator.Create(project);
 
                 SelectCurrentItem();
@@ -89,6 +95,22 @@ namespace MadsKristensen.AddAnyFile
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Cannot Add New File", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private static string CombinePaths(string path1, string path2)
+        {
+            if (path1.Length == 0)
+            {
+                return path2;
+            }
+            else if (path1.EndsWith("\\"))
+            {
+                return string.Concat(path1, path2);
+            }
+            else
+            {
+                return string.Concat(path1, "\\", path2);
             }
         }
 
