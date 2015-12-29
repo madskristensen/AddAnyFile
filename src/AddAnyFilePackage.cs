@@ -20,11 +20,12 @@ namespace MadsKristensen.AddAnyFile
     public sealed class AddAnyFilePackage : ExtensionPointPackage
     {
         private static DTE2 _dte;
-        public const string Version = "2.2";
+        public const string Version = "2.3";
         private static TemplateMap _templates;
         private static readonly object _templateLock = new object();
 
         private static string _lastUsedExtension = string.Empty;
+        private static string _secondLastUsedExtension = string.Empty;
 
         public static IServiceProvider ServiceProvider { get; private set; }
 
@@ -96,6 +97,7 @@ namespace MadsKristensen.AddAnyFile
 
                 if (info != ItemInfo.Empty)
                 {
+                    _secondLastUsedExtension = _lastUsedExtension;
                     _lastUsedExtension = info.Extension;
                 }
             }
@@ -123,9 +125,13 @@ namespace MadsKristensen.AddAnyFile
 
         private static string GetProjectDefaultExtension(Project project)
         {
-                // On certain projects (e.g. a project started with File > Add Existing Web site..) 
-                // Code Model is null.
-            if (project.CodeModel != null)
+            // On certain projects (e.g. a project started with File > Add Existing Web site..) 
+            // Code Model is null.
+            if (project.CodeModel != null && _lastUsedExtension != string.Empty && _secondLastUsedExtension == _lastUsedExtension)
+            {
+                return _lastUsedExtension;
+            }
+            else if (project.CodeModel != null)
             {
                 switch (project.CodeModel.Language)
                 {
