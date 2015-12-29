@@ -21,7 +21,7 @@
             this._relativePath = relativePath;
         }
 
-        public void Create(Project project)
+        public ItemInfo Create(Project project)
         {
             string templatePath = _solution.GetProjectItemTemplate(_template.TemplateName, _template.Language);
             string ext = GetTargetExtension(templatePath);
@@ -32,6 +32,11 @@
 
             var parent = GetItemParent(project);
             parent.AddFromTemplate(templatePath, itemName);
+
+            return new ItemInfo() {
+                Extension = ext,
+                FileName = itemName
+            };
         }
 
         private ProjectItems GetItemParent(Project project)

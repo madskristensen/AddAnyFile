@@ -20,7 +20,7 @@ namespace MadsKristensen.AddAnyFile.Templates
             this._dte = dte;
         }
 
-        public void Create(Project project)
+        public ItemInfo Create(Project project)
         {
             string file = Path.Combine(_folder, Path.Combine(_relativePath));
             string dir = Path.GetDirectoryName(file);
@@ -33,7 +33,7 @@ namespace MadsKristensen.AddAnyFile.Templates
             catch (Exception)
             {
                 System.Windows.Forms.MessageBox.Show("Error creating the folder: " + dir);
-                return;
+                return ItemInfo.Empty;
             }
 
             if (!File.Exists(file))
@@ -52,6 +52,11 @@ namespace MadsKristensen.AddAnyFile.Templates
                         selection.CharRight(Count: position - 1);
                     }
 
+                    return new ItemInfo() {
+                        Extension = Path.GetExtension(file),
+                        FileName = file
+                    };
+
                 }
                 catch { /* Something went wrong. What should we do about it? */ }
             }
@@ -59,6 +64,7 @@ namespace MadsKristensen.AddAnyFile.Templates
             {
                 System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
             }
+            return ItemInfo.Empty;
         }
 
         private static void AddFileToActiveProject(Project project, string fileName)

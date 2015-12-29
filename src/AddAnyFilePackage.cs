@@ -24,6 +24,8 @@ namespace MadsKristensen.AddAnyFile
         private static TemplateMap _templates;
         private static readonly object _templateLock = new object();
 
+        private static string _lastUsedExtension = string.Empty;
+
         public static IServiceProvider ServiceProvider { get; private set; }
 
         protected override void Initialize()
@@ -88,9 +90,14 @@ namespace MadsKristensen.AddAnyFile
             {
                 var itemManager = new ProjectItemManager(_dte, templates);
                 var creator = itemManager.GetCreator(projectPath, relativePath);
-                creator.Create(project);
+                var info = creator.Create(project);
 
                 SelectCurrentItem();
+
+                if (info != ItemInfo.Empty)
+                {
+                    _lastUsedExtension = info.Extension;
+                }
             }
             catch (Exception ex)
             {
@@ -116,15 +123,19 @@ namespace MadsKristensen.AddAnyFile
 
         private static string GetProjectDefaultExtension(Project project)
         {
-            switch (project.CodeModel.Language)
+                // On certain projects (e.g. a project started with File > Add Existing Web site..) 
+                // Code Model is null.
+            if (project.CodeModel != null)
             {
-                case CodeModelLanguageConstants.vsCMLanguageCSharp:
-                    return ".cs";
-                case CodeModelLanguageConstants.vsCMLanguageVB:
-                    return ".vb";
-                default:
-                    return string.Empty;
+                switch (project.CodeModel.Language)
+                {
+                    case CodeModelLanguageConstants.vsCMLanguageCSharp:
+                        return ".cs";
+                    case CodeModelLanguageConstants.vsCMLanguageVB:
+                        return ".vb";
+                }
             }
+            return _lastUsedExtension;
         }
 
         private static TemplateMap GetTemplateMap()
