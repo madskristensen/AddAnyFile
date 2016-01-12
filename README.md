@@ -15,6 +15,7 @@ or get the
 - Easily create any file with any file extension
 - Create files starting with a dot like `.gitignore`
 - Create deeper folder structures easily if required
+- Create folders when the entered name ends with a /
 
 ![Add new file dialog](art/dialog.png)
 

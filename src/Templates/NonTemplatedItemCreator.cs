@@ -42,20 +42,22 @@ namespace MadsKristensen.AddAnyFile.Templates
 
                 try
                 {
-                    AddFileToActiveProject(project, file);
-                    Window window = _dte.ItemOperations.OpenFile(file);
-
-                    // Move cursor into position
-                    if (position > 0)
+                    if (AddFileToActiveProject(project, file))
                     {
-                        TextSelection selection = (TextSelection)window.Selection;
-                        selection.CharRight(Count: position - 1);
-                    }
+                        Window window = _dte.ItemOperations.OpenFile(file);
 
-                    return new ItemInfo() {
-                        Extension = Path.GetExtension(file),
-                        FileName = file
-                    };
+                        // Move cursor into position
+                        if (position > 0)
+                        {
+                            TextSelection selection = (TextSelection)window.Selection;
+                            selection.CharRight(Count: position - 1);
+                        }
+
+                        return new ItemInfo() {
+                            Extension = Path.GetExtension(file),
+                            FileName = file
+                        };
+                    }
 
                 }
                 catch { /* Something went wrong. What should we do about it? */ }
@@ -67,23 +69,32 @@ namespace MadsKristensen.AddAnyFile.Templates
             return ItemInfo.Empty;
         }
 
-        private static void AddFileToActiveProject(Project project, string fileName)
+        private static bool AddFileToActiveProject(Project project, string fileName)
         {
             if (project == null || project.Kind == "{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") // ASP.NET 5 projects
-                return;
+                return false;
 
             string projectFilePath = AddAnyFilePackage.GetProjectRoot(project).Value.ToString();
             string projectDirPath = Path.GetDirectoryName(projectFilePath);
 
             if (!fileName.StartsWith(projectDirPath, StringComparison.OrdinalIgnoreCase))
-                return;
+                return false;
 
-            project.ProjectItems.AddFromFile(fileName);
+            var pi = project.ProjectItems.AddFromFile(fileName);
+            if (fileName.EndsWith("__dummy__"))
+            {
+                pi.Delete();
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
 
         private static int WriteFile(string file)
         {
-            Encoding encoding = new UTF8Encoding(false);
+            Encoding encoding = new UTF8Encoding(true);
             string extension = Path.GetExtension(file);
 
             string assembly = Assembly.GetExecutingAssembly().Location;
