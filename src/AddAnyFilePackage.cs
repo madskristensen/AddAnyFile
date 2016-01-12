@@ -20,12 +20,13 @@ namespace MadsKristensen.AddAnyFile
     public sealed class AddAnyFilePackage : ExtensionPointPackage
     {
         private static DTE2 _dte;
-        public const string Version = "2.3";
+        public const string Version = "2.4";
+        private const string OverridingExtensionPropertyName = "cdxOverridingFileExtension";
         private static TemplateMap _templates;
         private static readonly object _templateLock = new object();
 
         private static string _lastUsedExtension = string.Empty;
-        private static string _secondLastUsedExtension = string.Empty;
+        private static string _overridingExtension = null;
 
         public static IServiceProvider ServiceProvider { get; private set; }
 
@@ -95,11 +96,12 @@ namespace MadsKristensen.AddAnyFile
 
                 SelectCurrentItem();
 
-                if (info != ItemInfo.Empty)
+                if (info != ItemInfo.Empty && _lastUsedExtension != defaultExt && info.Extension == _lastUsedExtension)
                 {
-                    _secondLastUsedExtension = _lastUsedExtension;
-                    _lastUsedExtension = info.Extension;
+                    // TODO: Save extension to project-specific storage
+                    _overridingExtension = info.Extension;
                 }
+                _lastUsedExtension = info.Extension;
             }
             catch (Exception ex)
             {
@@ -127,11 +129,19 @@ namespace MadsKristensen.AddAnyFile
         {
             // On certain projects (e.g. a project started with File > Add Existing Web site..) 
             // Code Model is null.
-            if (project.CodeModel != null && _lastUsedExtension != string.Empty && _secondLastUsedExtension == _lastUsedExtension)
+            if (_overridingExtension != null)
             {
-                return _lastUsedExtension;
+                return _overridingExtension;
             }
-            else if (project.CodeModel != null)
+            /* TODO
+            else if (_lastUsedExtension == string.Empty)
+            {
+                // Indicates that this is the first file we are creating.
+               //_overridingExtension = // TODO: Load from project specific storage
+            }
+            */
+
+            if (_overridingExtension == null && project.CodeModel != null)
             {
                 switch (project.CodeModel.Language)
                 {
