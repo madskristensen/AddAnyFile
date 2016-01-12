@@ -55,8 +55,9 @@ namespace MadsKristensen.AddAnyFile
                     else
                         txtName.Text = string.Empty;
                 }
-                else if (b.Key == Key.OemPeriod && (p = txtName.Text.LastIndexOf('.')) > -1)
+                else if ((b.Key == Key.OemPeriod || b.Key == Key.Oem2) && (p = txtName.Text.LastIndexOf('.')) > -1)
                 {
+                    // Oem2 is a forward slash /
                     txtName.Select(p, txtName.Text.Length - p);
                 }
             };

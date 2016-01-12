@@ -95,7 +95,7 @@ namespace MadsKristensen.AddAnyFile
             try
             {
                 var itemManager = new ProjectItemManager(_dte, templates);
-                var creator = itemManager.GetCreator(projectPath, relativePath);
+                var creator = itemManager.GetCreator(project, projectPath, relativePath);
                 var info = creator.Create(project);
 
                 SelectCurrentItem();
@@ -131,7 +131,7 @@ namespace MadsKristensen.AddAnyFile
 
         private static string GetProjectDefaultExtension(Project project)
         {
-            // On certain projects (e.g. a project started with File > Add Existing Web site..) 
+            // On certain projects (e.g. a project started with File > Add Existing Web site..)
             // Code Model is null.
             if (_overridingExtension != null)
             {
@@ -268,7 +268,7 @@ namespace MadsKristensen.AddAnyFile
 
             return null;
         }
-        
+
         public static Project GetActiveProject()
         {
             try

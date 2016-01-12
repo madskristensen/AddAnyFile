@@ -12,8 +12,8 @@
         private readonly Solution2 _solution;
         private readonly string[] _relativePath;
 
-        public TemplatedItemCreator(Solution2 solution, 
-                TemplateMapping template, 
+        public TemplatedItemCreator(Solution2 solution,
+                TemplateMapping template,
                 string[] relativePath)
         {
             this._solution = solution;
