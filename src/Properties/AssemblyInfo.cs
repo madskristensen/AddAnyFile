@@ -4,7 +4,7 @@ using System.Resources;
 using System.Runtime.InteropServices;
 using MadsKristensen.AddAnyFile;
 
-[assembly: AssemblyTitle("Add  Empty File")]
+[assembly: AssemblyTitle("Add New File+")]
 [assembly: AssemblyDescription("Gives the ability to add an empty file with any extension and starting with a dot")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Mads Kristensen")]

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
-using Microsoft.VisualStudio.Shell;
 
 namespace MadsKristensen.AddAnyFile
 {
@@ -17,7 +16,7 @@ namespace MadsKristensen.AddAnyFile
             "Tip: Create folder by ending the name with a forward slash",
         };
 
-        public FileNameDialog(string folder)
+        public FileNameDialog(string folder, string defaultExt)
         {
             InitializeComponent();
 
@@ -30,7 +29,9 @@ namespace MadsKristensen.AddAnyFile
 
                 txtName.Focus();
                 txtName.CaretIndex = 0;
-                txtName.Text = DEFAULT_TEXT;
+                txtName.Text = "filename" + defaultExt;
+                txtName.Select(0, txtName.Text.Length - defaultExt.Length);
+                /*DEFAULT_TEXT;
 
                 txtName.PreviewKeyDown += delegate
                 {
@@ -40,15 +41,24 @@ namespace MadsKristensen.AddAnyFile
                         btnCreate.IsEnabled = true;
                     }
                 };
+                */
             };
 
             PreviewKeyDown += (a, b) =>
             {
+                int p = -1;
+
                 if (b.Key == Key.Escape)
+                {
                     if (string.IsNullOrWhiteSpace(txtName.Text) || txtName.Text == DEFAULT_TEXT)
                         Close();
                     else
                         txtName.Text = string.Empty;
+                }
+                else if (b.Key == Key.OemPeriod && (p = txtName.Text.LastIndexOf('.')) > -1)
+                {
+                    txtName.Select(p, txtName.Text.Length - p);
+                }
             };
         }
 
