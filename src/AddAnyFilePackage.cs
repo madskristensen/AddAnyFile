@@ -21,7 +21,7 @@ namespace MadsKristensen.AddAnyFile
     {
         private static DTE2 _dte;
         public const string Version = "2.4";
-        private const string OverridingExtensionPropertyName = "cdxOverridingFileExtension";
+        // private const string OverridingExtensionPropertyName = "cdxOverridingFileExtension";
         private static TemplateMap _templates;
         private static readonly object _templateLock = new object();
 
@@ -72,6 +72,10 @@ namespace MadsKristensen.AddAnyFile
 
             if (string.IsNullOrEmpty(input))
                 return;
+            else if (input.EndsWith("\\"))
+            {
+                input = input + "__dummy__";
+            }
 
             TemplateMap templates = GetTemplateMap();
 
@@ -264,7 +268,7 @@ namespace MadsKristensen.AddAnyFile
 
             return null;
         }
-
+        
         public static Project GetActiveProject()
         {
             try
