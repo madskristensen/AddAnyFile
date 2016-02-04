@@ -13,7 +13,7 @@ namespace MadsKristensen.AddAnyFile
             "Tip: 'folder/file.ext' also creates a new folder for the file",
             "Tip: You can create files starting with a dot, like '.gitignore'",
             "Tip: You can create files without file extensions, like 'LICENSE'",
-            "Tip: Create folder by ending the name with a forward slash",
+            "Tip: Create folder by ending the name with a forward slash"
         };
 
         public FileNameDialog(string folder, string defaultExt)
@@ -29,38 +29,31 @@ namespace MadsKristensen.AddAnyFile
 
                 txtName.Focus();
                 txtName.CaretIndex = 0;
-                txtName.Text = "filename" + defaultExt;
-                txtName.Select(0, txtName.Text.Length - defaultExt.Length);
-                /*DEFAULT_TEXT;
+                txtName.Text = DEFAULT_TEXT;
+                txtName.Select(0, txtName.Text.Length);
 
-                txtName.PreviewKeyDown += delegate
+                txtName.PreviewKeyDown += (a, b) =>
                 {
-                    if (txtName.Text == DEFAULT_TEXT)
+                    if (b.Key == Key.Escape)
+                    {
+                        if (string.IsNullOrWhiteSpace(txtName.Text) || txtName.Text == DEFAULT_TEXT)
+                            Close();
+                        else
+                            txtName.Text = string.Empty;
+                    }
+                    else if (txtName.Text == DEFAULT_TEXT)
                     {
                         txtName.Text = string.Empty;
                         btnCreate.IsEnabled = true;
                     }
                 };
-                */
-            };
 
-            PreviewKeyDown += (a, b) =>
-            {
-                int p = -1;
-
-                if (b.Key == Key.Escape)
-                {
-                    if (string.IsNullOrWhiteSpace(txtName.Text) || txtName.Text == DEFAULT_TEXT)
-                        Close();
-                    else
-                        txtName.Text = string.Empty;
-                }
-                else if ((b.Key == Key.OemPeriod || b.Key == Key.Oem2) && (p = txtName.Text.LastIndexOf('.')) > -1)
-                {
-                    // Oem2 is a forward slash /
-                    txtName.Select(p, txtName.Text.Length - p);
-                }
             };
+        }
+
+        public string Input
+        {
+            get { return txtName.Text.Trim(); }
         }
 
         private void SetRandomTip()
@@ -68,11 +61,6 @@ namespace MadsKristensen.AddAnyFile
             Random rnd = new Random(DateTime.Now.GetHashCode());
             int index = rnd.Next(_tips.Count);
             lblTips.Content = _tips[index];
-        }
-
-        public string Input
-        {
-            get { return txtName.Text.Trim(); }
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

@@ -53,14 +53,18 @@ namespace MadsKristensen.AddAnyFile.Templates
                             selection.CharRight(Count: position - 1);
                         }
 
-                        return new ItemInfo() {
+                        return new ItemInfo
+                        {
                             Extension = Path.GetExtension(file),
                             FileName = file
                         };
                     }
 
                 }
-                catch { /* Something went wrong. What should we do about it? */ }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.Write(ex);
+                }
             }
             else
             {
@@ -81,7 +85,7 @@ namespace MadsKristensen.AddAnyFile.Templates
                 return false;
 
             var pi = project.ProjectItems.AddFromFile(fileName);
-            if (fileName.EndsWith("__dummy__"))
+            if (fileName.EndsWith("__dummy__", StringComparison.Ordinal))
             {
                 pi.Delete();
                 return false;

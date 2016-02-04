@@ -72,7 +72,8 @@ namespace MadsKristensen.AddAnyFile
 
             if (string.IsNullOrEmpty(input))
                 return;
-            else if (input.EndsWith("\\"))
+
+            if (input.EndsWith("\\", StringComparison.Ordinal))
             {
                 input = input + "__dummy__";
             }
@@ -119,7 +120,7 @@ namespace MadsKristensen.AddAnyFile
             {
                 return path2;
             }
-            else if (path1.EndsWith("\\"))
+            else if (path1.EndsWith("\\", StringComparison.Ordinal))
             {
                 return string.Concat(path1, path2);
             }
@@ -278,9 +279,10 @@ namespace MadsKristensen.AddAnyFile
                 if (activeSolutionProjects != null && activeSolutionProjects.Length > 0)
                     return activeSolutionProjects.GetValue(0) as Project;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Pass through and return null
+                System.Diagnostics.Debug.WriteLine(ex);
             }
 
             return null;
@@ -298,7 +300,11 @@ namespace MadsKristensen.AddAnyFile
                     _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
                     _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
                 }
-                catch { /* Ignore any exceptions */ }
+                catch (Exception ex)
+                {
+                    /* Ignore any exceptions */
+                    System.Diagnostics.Debug.Write(ex);
+                }
             });
         }
 

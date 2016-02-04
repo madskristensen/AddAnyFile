@@ -7,7 +7,7 @@
     using M = TemplateMapping;
 
     /// <summary>
-    /// Map of input patterns and their corresponding VS Templates. Ideally, these patterns would be configurable via the 
+    /// Map of input patterns and their corresponding VS Templates. Ideally, these patterns would be configurable via the
     /// Visual Studio Options dialog box.
     /// </summary>
     public class TemplateMap : List<TemplateMapping>
@@ -22,10 +22,10 @@
             this.Add(new M(@"^(?<name>I[A-Z].*)\.cs$", "CSharp", "Interface"));
             this.Add(new M(@"^(?<name>I[A-Z].*)\.vb$", "VisualBasic", "Interface"));
             /* NOTE: With VS 2015 Community Edition, CodeFile.cs was not replacing the $rootnamespace$ tag.
-             * If this happens, open the CodeFile.vstemplate file 
+             * If this happens, open the CodeFile.vstemplate file
              * (e.g. in C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\ItemTemplates\CSharp\Code\1033\CodeFile\CodeFile.vstemplate)
              * and replace
-             
+
               <TemplateContent>
                 <ProjectItem>CodeFile.cs</ProjectItem>
               </TemplateContent>
@@ -76,7 +76,7 @@
                 {
                     var serizlier = new DataContractJsonSerializer(
                                         typeof(TemplateMap),
-                                        new DataContractJsonSerializerSettings() {
+                                        new DataContractJsonSerializerSettings {
                                             UseSimpleDictionaryFormat = true
                                         });
                     serizlier.WriteObject(fileStream, map);
@@ -91,10 +91,6 @@
                     e.Message));
 
             }
-        }
-
-        public TemplateMap()
-        {
         }
     }
 }

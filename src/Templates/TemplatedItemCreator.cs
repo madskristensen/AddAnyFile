@@ -33,7 +33,7 @@
             var parent = GetItemParent(project);
             parent.AddFromTemplate(templatePath, itemName);
 
-            return new ItemInfo() {
+            return new ItemInfo {
                 Extension = ext,
                 FileName = itemName
             };
