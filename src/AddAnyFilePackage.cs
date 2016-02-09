@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Windows;
 using EnvDTE;
 using EnvDTE80;
@@ -73,44 +75,51 @@ namespace MadsKristensen.AddAnyFile
             if (string.IsNullOrEmpty(input))
                 return;
 
-            if (input.EndsWith("\\", StringComparison.Ordinal))
-            {
-                input = input + "__dummy__";
-            }
-
             TemplateMap templates = GetTemplateMap();
+            string[] parsedInputs = GetParsedInput(input);
 
-            string projectPath = Path.GetDirectoryName(project.FullName);
-            string relativePath;
-            if (folder.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && folder.Length > projectPath.Length)
+            foreach (string inputItem in parsedInputs)
             {
-                relativePath = CombinePaths(folder.Substring(projectPath.Length + 1), input);
-                // I'm intentionally avoiding the use of Path.Combine because input may contain pattern characters
-                // such as ':' which will cause Path.Combine to handle differently. We simply need a string concat here.
-            }
-            else
-            {
-                relativePath = input;
-            }
+                input = inputItem;
 
-            try
-            {
-                var itemManager = new ProjectItemManager(_dte, templates);
-                var creator = itemManager.GetCreator(project, projectPath, relativePath);
-                var info = creator.Create(project);
-
-                SelectCurrentItem();
-
-                if (info != ItemInfo.Empty && _lastUsedExtension != defaultExt && info.Extension == _lastUsedExtension)
+                if (input.EndsWith("\\", StringComparison.Ordinal))
                 {
-                    // TODO: Save extension to project-specific storage
-                    _overridingExtension = info.Extension;
+                    input = input + "__dummy__";
                 }
-                _lastUsedExtension = info.Extension;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Cannot Add New File", MessageBoxButton.OK, MessageBoxImage.Error);
+
+
+                string projectPath = Path.GetDirectoryName(project.FullName);
+                string relativePath;
+                if (folder.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && folder.Length > projectPath.Length)
+                {
+                    relativePath = CombinePaths(folder.Substring(projectPath.Length + 1), input);
+                    // I'm intentionally avoiding the use of Path.Combine because input may contain pattern characters
+                    // such as ':' which will cause Path.Combine to handle differently. We simply need a string concat here.
+                }
+                else
+                {
+                    relativePath = input;
+                }
+
+                try
+                {
+                    var itemManager = new ProjectItemManager(_dte, templates);
+                    var creator = itemManager.GetCreator(project, projectPath, relativePath);
+                    var info = creator.Create(project);
+
+                    SelectCurrentItem();
+
+                    if (info != ItemInfo.Empty && _lastUsedExtension != defaultExt && info.Extension == _lastUsedExtension)
+                    {
+                        // TODO: Save extension to project-specific storage
+                        _overridingExtension = info.Extension;
+                    }
+                    _lastUsedExtension = info.Extension;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Could not create: " + input, MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
@@ -128,6 +137,36 @@ namespace MadsKristensen.AddAnyFile
             {
                 return string.Concat(path1, "\\", path2);
             }
+        }
+
+        static string[] GetParsedInput(string input)
+        {
+            // var tests = new string[] { "file1.txt", "file1.txt, file2.txt", ".ignore", ".ignore.(old,new)", "license", "folder/",
+            //    "folder\\", "folder\\file.txt", "folder/.thing", "page.aspx.cs", "widget-1.(html,js)", "pages\\home.(aspx, aspx.cs)",
+            //    "home.(html,js), about.(html,js,css)", "backup.2016.(old, new)", "file.(txt,txt,,)", "file_@#d+|%.3-2...3^&.txt" };
+            Regex pattern = new Regex(@"[,]?([^(,]*)([\.\/\\]?)[(]?((?<=[^(])[^,]*|[^)]+)[)]?");
+            List<string> results = new List<string>();
+            Match match = pattern.Match(input);
+
+            while (match.Success)
+            {
+                // Alwasy 4 matches w. Group[3] being the extension, extension list, folder terminator ("/" or "\"), or empty string
+                string path = match.Groups[1].Value.Trim() + match.Groups[2].Value;
+                string[] extensions = match.Groups[3].Value.Split(',');
+
+                foreach (string ext in extensions)
+                {
+                    string value = path + ext.Trim();
+
+                    // ensure "file.(txt,,txt)" or "file.txt,,file.txt,File.TXT" retuns as just ["file.txt"]
+                    if (value != "" && !value.EndsWith(".") && !results.Contains(value, StringComparer.OrdinalIgnoreCase))
+                    {
+                        results.Add(value);
+                    }
+                }
+                match = match.NextMatch();
+            }
+            return results.ToArray();
         }
 
         private static string GetProjectDefaultExtension(Project project)

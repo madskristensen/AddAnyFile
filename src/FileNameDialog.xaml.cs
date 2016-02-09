@@ -13,7 +13,9 @@ namespace MadsKristensen.AddAnyFile
             "Tip: 'folder/file.ext' also creates a new folder for the file",
             "Tip: You can create files starting with a dot, like '.gitignore'",
             "Tip: You can create files without file extensions, like 'LICENSE'",
-            "Tip: Create folder by ending the name with a forward slash"
+            "Tip: Create folder by ending the name with a forward slash",
+            "Tip: Use glob style syntax to add related files, like 'widget.(html,js)'",
+            "Tip: Separate names with commas to add multiple files and folders quickly"
         };
 
         public FileNameDialog(string folder, string defaultExt)
