@@ -42,9 +42,11 @@
         private ProjectItems GetItemParent(Project project)
         {
             var parent = project.ProjectItems;
+
+            // Replace (node) with string.Empty to make it work in NTVS projects
             Func<string, ProjectItems, ProjectItem> existingItem = (name, items) => items
                                                         .Cast<ProjectItem>()
-                                                        .FirstOrDefault(p => p.Name == name);
+                                                        .FirstOrDefault(p => p.Name.Replace(" (node)", "") == name);
 
             for (int i = 0; i < _relativePath.Length - 1; i++)
             {
