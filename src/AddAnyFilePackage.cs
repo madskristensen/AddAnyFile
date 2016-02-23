@@ -16,13 +16,13 @@ namespace MadsKristensen.AddAnyFile
 {
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
-    [InstalledProductRegistration("#110", "#112", Version, IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", Vsix.Version, IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [Guid(GuidList.guidAddAnyFilePkgString)]
+    [Guid(PackageGuids.guidAddAnyFilePkgString)]
     public sealed class AddAnyFilePackage : ExtensionPointPackage
     {
         private static DTE2 _dte;
-        public const string Version = "2.4";
+
         // private const string OverridingExtensionPropertyName = "cdxOverridingFileExtension";
         private static TemplateMap _templates;
         private static readonly object _templateLock = new object();
@@ -42,7 +42,7 @@ namespace MadsKristensen.AddAnyFile
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (null != mcs)
             {
-                CommandID menuCommandID = new CommandID(GuidList.guidAddAnyFileCmdSet, (int)PkgCmdIDList.cmdidMyCommand);
+                CommandID menuCommandID = new CommandID(PackageGuids.guidAddAnyFileCmdSet, PackageIds.cmdidMyCommand);
                 MenuCommand menuItem = new MenuCommand(MenuItemCallback, menuCommandID);
                 mcs.AddCommand(menuItem);
             }

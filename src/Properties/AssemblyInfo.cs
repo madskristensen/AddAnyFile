@@ -4,20 +4,20 @@ using System.Resources;
 using System.Runtime.InteropServices;
 using MadsKristensen.AddAnyFile;
 
-[assembly: AssemblyTitle("Add New File+")]
-[assembly: AssemblyDescription("Gives the ability to add an empty file with any extension and starting with a dot")]
+[assembly: AssemblyTitle(Vsix.Name)]
+[assembly: AssemblyDescription(Vsix.Description)]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Mads Kristensen")]
-[assembly: AssemblyProduct("Add  Empty File")]
-[assembly: AssemblyCopyright("Copyright 2014 Mads Kristensen")]
+[assembly: AssemblyCompany(Vsix.Author)]
+[assembly: AssemblyProduct(Vsix.Name)]
+[assembly: AssemblyCopyright(Vsix.Author)]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]
 [assembly: NeutralResourcesLanguage("en-US")]
 
-[assembly: AssemblyVersion(AddAnyFilePackage.Version)]
-[assembly: AssemblyFileVersion(AddAnyFilePackage.Version)]
+[assembly: AssemblyVersion(Vsix.Version)]
+[assembly: AssemblyFileVersion(Vsix.Version)]
 
 
 

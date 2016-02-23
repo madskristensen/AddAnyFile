@@ -135,12 +135,19 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddAnyFile.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AddAnyFile.vsct</DependentUpon>
+    </Compile>
     <Compile Include="FileNameDialog.xaml.cs">
       <DependentUpon>FileNameDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Guids.cs" />
     <Compile Include="AddAnyFilePackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="source.extension.cs">
+      <DependentUpon>source.extension.vsixmanifest</DependentUpon>
+    </Compile>
     <Compile Include="Templates\IItemCreator.cs" />
     <Compile Include="Templates\NonTemplatedItemCreator.cs" />
     <Compile Include="Templates\ProjectItemManager.cs" />
@@ -153,7 +160,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="VSPackage.resx">
+    <EmbeddedResource Include="source.extension.resx">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>source.extension.vsixmanifest</DependentUpon>
       <MergeWithCTO>true</MergeWithCTO>
       <ManifestResourceName>VSPackage</ManifestResourceName>
     </EmbeddedResource>
@@ -161,7 +171,12 @@
   <ItemGroup>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
+      <Generator>VsixManifestGenerator</Generator>
+      <LastGenOutput>source.extension.resx</LastGenOutput>
     </None>
+    <Resource Include="source.extension.ico">
+      <DependentUpon>source.extension.vsixmanifest</DependentUpon>
+    </Resource>
     <Content Include="Templates\.json">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -170,6 +185,8 @@
     <VSCTCompile Include="AddAnyFile.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
+      <Generator>VsctGenerator</Generator>
+      <LastGenOutput>AddAnyFile.cs</LastGenOutput>
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
@@ -179,7 +196,6 @@
     <Content Include="Resources\logo.png">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="FileNameDialog.xaml">
