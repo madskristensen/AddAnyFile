@@ -27,9 +27,6 @@ namespace MadsKristensen.AddAnyFile
         private static TemplateMap _templates;
         private static readonly object _templateLock = new object();
 
-        private static string _lastUsedExtension = string.Empty;
-        private static string _overridingExtension = null;
-
         public static IServiceProvider ServiceProvider { get; private set; }
 
         protected override void Initialize()
@@ -66,11 +63,7 @@ namespace MadsKristensen.AddAnyFile
             if (project == null)
                 return;
 
-            string defaultExt = GetProjectDefaultExtension(project);
-            string input = PromptForFileName(
-                                folder,
-                                defaultExt
-                            ).TrimStart('/', '\\').Replace("/", "\\");
+            string input = PromptForFileName(folder).TrimStart('/', '\\').Replace("/", "\\");
 
             if (string.IsNullOrEmpty(input))
                 return;
@@ -107,14 +100,9 @@ namespace MadsKristensen.AddAnyFile
                     var creator = itemManager.GetCreator(project, projectPath, relativePath);
                     var info = creator.Create(project);
 
-                    SelectCurrentItem();
-
-                    if (info != ItemInfo.Empty && _lastUsedExtension != defaultExt && info.Extension == _lastUsedExtension)
-                    {
-                        // TODO: Save extension to project-specific storage
-                        _overridingExtension = info.Extension;
-                    }
-                    _lastUsedExtension = info.Extension;
+                    var cmd = _dte.Commands.Item("SolutionExplorer.SyncWithActiveDocument");
+                    if (cmd.IsAvailable)
+                        _dte.ExecuteCommand(cmd.Name);
                 }
                 catch (Exception ex)
                 {
@@ -159,7 +147,7 @@ namespace MadsKristensen.AddAnyFile
                     string value = path + ext.Trim();
 
                     // ensure "file.(txt,,txt)" or "file.txt,,file.txt,File.TXT" retuns as just ["file.txt"]
-                    if (value != "" && !value.EndsWith(".") && !results.Contains(value, StringComparer.OrdinalIgnoreCase))
+                    if (value != "" && !value.EndsWith(".", StringComparison.Ordinal) && !results.Contains(value, StringComparer.OrdinalIgnoreCase))
                     {
                         results.Add(value);
                     }
@@ -167,35 +155,6 @@ namespace MadsKristensen.AddAnyFile
                 match = match.NextMatch();
             }
             return results.ToArray();
-        }
-
-        private static string GetProjectDefaultExtension(Project project)
-        {
-            // On certain projects (e.g. a project started with File > Add Existing Web site..)
-            // Code Model is null.
-            if (_overridingExtension != null)
-            {
-                return _overridingExtension;
-            }
-            /* TODO
-            else if (_lastUsedExtension == string.Empty)
-            {
-                // Indicates that this is the first file we are creating.
-               //_overridingExtension = // TODO: Load from project specific storage
-            }
-            */
-
-            if (_overridingExtension == null && project.CodeModel != null)
-            {
-                switch (project.CodeModel.Language)
-                {
-                    case CodeModelLanguageConstants.vsCMLanguageCSharp:
-                        return ".cs";
-                    case CodeModelLanguageConstants.vsCMLanguageVB:
-                        return ".vb";
-                }
-            }
-            return _lastUsedExtension;
         }
 
         private static TemplateMap GetTemplateMap()
@@ -220,21 +179,12 @@ namespace MadsKristensen.AddAnyFile
             return _templates;
         }
 
-        private static string PromptForFileName(string folder, string defaultExt)
+        private static string PromptForFileName(string folder)
         {
             DirectoryInfo dir = new DirectoryInfo(folder);
-            FileNameDialog dialog = new FileNameDialog(dir.Name, defaultExt);
+            FileNameDialog dialog = new FileNameDialog(dir.Name);
             var result = dialog.ShowDialog();
             return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
-        }
-
-        private static string GetRelativePath(Project project, string fullName)
-        {
-            string projectPath = Path.GetDirectoryName(project.FullName);
-            if (fullName.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase))
-                return fullName.Substring(projectPath.Length + 1);
-            else
-                return fullName;
         }
 
         private static string FindFolder(UIHierarchyItem item)
@@ -325,26 +275,6 @@ namespace MadsKristensen.AddAnyFile
             }
 
             return null;
-        }
-
-        private static void SelectCurrentItem()
-        {
-            if (_dte.Version == "11.0") // This errors in VS2012 for some reason.
-                return;
-
-            System.Threading.ThreadPool.QueueUserWorkItem((o) =>
-            {
-                try
-                {
-                    _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
-                    _dte.ExecuteCommand("View.TrackActivityInSolutionExplorer");
-                }
-                catch (Exception ex)
-                {
-                    /* Ignore any exceptions */
-                    System.Diagnostics.Debug.Write(ex);
-                }
-            });
         }
 
         public static Property GetProjectRoot(Project project)

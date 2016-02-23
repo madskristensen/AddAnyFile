@@ -18,7 +18,7 @@ namespace MadsKristensen.AddAnyFile
             "Tip: Separate names with commas to add multiple files and folders quickly"
         };
 
-        public FileNameDialog(string folder, string defaultExt)
+        public FileNameDialog(string folder)
         {
             InitializeComponent();
 
@@ -27,6 +27,7 @@ namespace MadsKristensen.AddAnyFile
             Loaded += (s, e) =>
             {
                 Icon = BitmapFrame.Create(new Uri("pack://application:,,,/AddAnyFile;component/Resources/icon.png", UriKind.RelativeOrAbsolute));
+                Title = Vsix.Name;
                 SetRandomTip();
 
                 txtName.Focus();
