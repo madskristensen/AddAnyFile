@@ -1,14 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AddAnyFile", "src\AddAnyFile.csproj", "{CAD947D3-06E2-4A76-8838-68115036B179}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{50C409A6-1C74-4C72-887A-3AC964BD505D}"
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
 		appveyor.yml = appveyor.yml
 		README.md = README.md
 	EndProjectSection
