@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Interop;
 using EnvDTE;
 using EnvDTE80;
 using MadsKristensen.AddAnyFile.Templates;
@@ -40,9 +41,22 @@ namespace MadsKristensen.AddAnyFile
             if (null != mcs)
             {
                 CommandID menuCommandID = new CommandID(PackageGuids.guidAddAnyFileCmdSet, PackageIds.cmdidMyCommand);
-                MenuCommand menuItem = new MenuCommand(MenuItemCallback, menuCommandID);
+                var menuItem = new OleMenuCommand(MenuItemCallback, menuCommandID);
+                menuItem.BeforeQueryStatus += MenuItem_BeforeQueryStatus;
                 mcs.AddCommand(menuItem);
             }
+        }
+
+        private void MenuItem_BeforeQueryStatus(object sender, EventArgs e)
+        {
+            var button = (OleMenuCommand)sender;
+            button.Visible = button.Enabled = false;
+
+            UIHierarchyItem item = GetSelectedItem();
+            var project = item.Object as Project;
+
+            if (project == null || !project.Kind.Equals(EnvDTE.Constants.vsProjectKindSolutionItems, StringComparison.OrdinalIgnoreCase))
+                button.Visible = button.Enabled = true;
         }
 
         private void MenuItemCallback(object sender, EventArgs e)
@@ -179,10 +193,15 @@ namespace MadsKristensen.AddAnyFile
             return _templates;
         }
 
-        private static string PromptForFileName(string folder)
+        private string PromptForFileName(string folder)
         {
             DirectoryInfo dir = new DirectoryInfo(folder);
-            FileNameDialog dialog = new FileNameDialog(dir.Name);
+            var dialog = new FileNameDialog(dir.Name);
+
+            var hwnd = new IntPtr(_dte.MainWindow.HWnd);
+            var window = (System.Windows.Window)HwndSource.FromHwnd(hwnd).RootVisual;
+            dialog.Owner = window;
+
             var result = dialog.ShowDialog();
             return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
         }

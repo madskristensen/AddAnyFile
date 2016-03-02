@@ -8,6 +8,8 @@
         <Buttons>
             <Button guid="guidAddAnyFileCmdSet" id="cmdidMyCommand" priority="0x0200" type="Button">
                 <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
+                <CommandFlag>DynamicVisibility</CommandFlag>
+                <CommandFlag>DefaultDisabled</CommandFlag>
                 <Strings>
                     <CommandName>AddEmptyFile</CommandName>
                     <ButtonText>New Empty File...</ButtonText>
