@@ -138,7 +138,7 @@ namespace MadsKristensen.AddAnyFile
 
                 if (doc != null && !string.IsNullOrEmpty(doc.FullName))
                 {
-                    var item = _dte.Solution?.FindProjectItem(doc.FullName);
+                    var item = (_dte.Solution != null) ? _dte.Solution.FindProjectItem(doc.FullName) : null;
 
                     if (item != null)
                         return item.ContainingProject;
