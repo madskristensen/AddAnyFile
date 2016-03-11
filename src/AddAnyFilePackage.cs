@@ -4,14 +4,15 @@ using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows;
+using System.Threading.Tasks;
 using System.Windows.Interop;
 using EnvDTE;
 using EnvDTE80;
-using MadsKristensen.AddAnyFile.Templates;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
 
 namespace MadsKristensen.AddAnyFile
 {
@@ -22,18 +23,14 @@ namespace MadsKristensen.AddAnyFile
     [Guid(PackageGuids.guidAddAnyFilePkgString)]
     public sealed class AddAnyFilePackage : ExtensionPointPackage
     {
-        private static DTE2 _dte;
-
-        // private const string OverridingExtensionPropertyName = "cdxOverridingFileExtension";
-        private static TemplateMap _templates;
-        private static readonly object _templateLock = new object();
-
-        public static IServiceProvider ServiceProvider { get; private set; }
+        public static DTE2 _dte;
 
         protected override void Initialize()
         {
             _dte = GetService(typeof(DTE)) as DTE2;
-            ServiceProvider = this;
+
+            Logger.Initialize(this, Vsix.Name);
+            Telemetry.Initialize(_dte, Vsix.Version, "e146dff7-f7c5-49ab-a7d8-3557375f6624");
 
             base.Initialize();
 
@@ -59,7 +56,7 @@ namespace MadsKristensen.AddAnyFile
                 button.Visible = button.Enabled = true;
         }
 
-        private void MenuItemCallback(object sender, EventArgs e)
+        private async void MenuItemCallback(object sender, EventArgs e)
         {
             UIHierarchyItem item = GetSelectedItem();
 
@@ -71,9 +68,7 @@ namespace MadsKristensen.AddAnyFile
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
                 return;
 
-            // See if the user has a valid selection on the Solution Tree and avoid prompting the user
-            // for a file name.
-            Project project = GetActiveProject();
+            Project project = ProjectHelpers.GetActiveProject();
             if (project == null)
                 return;
 
@@ -82,7 +77,6 @@ namespace MadsKristensen.AddAnyFile
             if (string.IsNullOrEmpty(input))
                 return;
 
-            TemplateMap templates = GetTemplateMap();
             string[] parsedInputs = GetParsedInput(input);
 
             foreach (string inputItem in parsedInputs)
@@ -94,51 +88,71 @@ namespace MadsKristensen.AddAnyFile
                     input = input + "__dummy__";
                 }
 
+                string file = Path.Combine(folder, input);
+                string dir = Path.GetDirectoryName(file);
 
-                string projectPath = Path.GetDirectoryName(project.FullName);
-                string relativePath;
-                if (folder.StartsWith(projectPath, StringComparison.OrdinalIgnoreCase) && folder.Length > projectPath.Length)
+                PackageUtilities.EnsureOutputPath(dir);
+
+                if (!File.Exists(file))
                 {
-                    relativePath = CombinePaths(folder.Substring(projectPath.Length + 1), input);
-                    // I'm intentionally avoiding the use of Path.Combine because input may contain pattern characters
-                    // such as ':' which will cause Path.Combine to handle differently. We simply need a string concat here.
+                    int position = await WriteFile(project, file);
+
+                    try
+                    {
+                        var projectItem = project.AddFileToProject(file);
+
+                        if (file.EndsWith("__dummy__"))
+                        {
+                            Telemetry.TrackEvent("Folder added");
+                            projectItem.Delete();
+                            continue;
+                        }
+
+                        var window = (Window2)_dte.ItemOperations.OpenFile(file);
+
+                        // Move cursor into position
+                        if (position > 0)
+                        {
+                            var view = ProjectHelpers.GetCurentTextView();
+
+                            if (view != null)
+                                view.Caret.MoveTo(new SnapshotPoint(view.TextBuffer.CurrentSnapshot, position));
+                        }
+
+                        _dte.ExecuteCommand("SolutionExplorer.SyncWithActiveDocument");
+                        _dte.ActiveDocument.Activate();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(ex);
+                    }
                 }
                 else
                 {
-                    relativePath = input;
-                }
-
-                try
-                {
-                    var itemManager = new ProjectItemManager(_dte, templates);
-                    var creator = itemManager.GetCreator(project, projectPath, relativePath);
-                    var info = creator.Create(project);
-
-                    var cmd = _dte.Commands.Item("SolutionExplorer.SyncWithActiveDocument");
-                    if (cmd.IsAvailable)
-                        _dte.ExecuteCommand(cmd.Name);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message, "Could not create: " + input, MessageBoxButton.OK, MessageBoxImage.Error);
+                    System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
                 }
             }
         }
 
-        private static string CombinePaths(string path1, string path2)
+        private static async Task<int> WriteFile(Project project, string file)
         {
-            if (path1.Length == 0)
+            Encoding encoding = new UTF8Encoding(false);
+            string extension = Path.GetExtension(file);
+            string template = await TemplateMap.GetTemplateFilePath(project, file);
+
+            var props = new Dictionary<string, string>() { { "extension", extension.ToLowerInvariant() } };
+            Telemetry.TrackEvent("File added", props);
+
+            if (!string.IsNullOrEmpty(template))
             {
-                return path2;
+                int index = template.IndexOf('$');
+                template = template.Remove(index, 1);
+                File.WriteAllText(file, template, encoding);
+                return index;
             }
-            else if (path1.EndsWith("\\", StringComparison.Ordinal))
-            {
-                return string.Concat(path1, path2);
-            }
-            else
-            {
-                return string.Concat(path1, "\\", path2);
-            }
+
+            File.WriteAllText(file, string.Empty, encoding);
+            return 0;
         }
 
         static string[] GetParsedInput(string input)
@@ -169,28 +183,6 @@ namespace MadsKristensen.AddAnyFile
                 match = match.NextMatch();
             }
             return results.ToArray();
-        }
-
-        private static TemplateMap GetTemplateMap()
-        {
-            TemplateMap templates = null;
-            if (_templates == null)
-                lock (_templateLock)
-                    if (_templates == null)
-                    {
-                        string path = Path.Combine(
-                                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                                        "VisualStudio.AddAnyFile",
-                                        "Patterns.json");
-                        if ((templates = TemplateMap.LoadFromFile(path)) == null)
-                        {
-                            templates = new TemplateMap();
-                            templates.LoadDefaultMappings();
-                            TemplateMap.WriteToFile(templates, path);
-                        }
-                        _templates = templates;
-                    }
-            return _templates;
         }
 
         private string PromptForFileName(string folder)
@@ -247,22 +239,9 @@ namespace MadsKristensen.AddAnyFile
             }
             else if (project != null)
             {
-                Property prop = GetProjectRoot(project);
-
-                if (prop != null)
-                {
-                    string value = prop.Value.ToString();
-
-                    if (File.Exists(value))
-                    {
-                        folder = Path.GetDirectoryName(value);
-                    }
-                    else if (Directory.Exists(value))
-                    {
-                        folder = value;
-                    }
-                }
+                folder = project.GetRootFolder();
             }
+
             return folder;
         }
 
@@ -276,61 +255,6 @@ namespace MadsKristensen.AddAnyFile
             }
 
             return null;
-        }
-
-        public static Project GetActiveProject()
-        {
-            try
-            {
-                Array activeSolutionProjects = _dte.ActiveSolutionProjects as Array;
-
-                if (activeSolutionProjects != null && activeSolutionProjects.Length > 0)
-                    return activeSolutionProjects.GetValue(0) as Project;
-            }
-            catch (Exception ex)
-            {
-                // Pass through and return null
-                System.Diagnostics.Debug.WriteLine(ex);
-            }
-
-            return null;
-        }
-
-        public static Property GetProjectRoot(Project project)
-        {
-            Property prop;
-
-            try
-            {
-                prop = project.Properties.Item("FullPath");
-            }
-            catch (ArgumentException)
-            {
-                try
-                {
-                    // MFC projects don't have FullPath, and there seems to be no way to query existence
-                    prop = project.Properties.Item("ProjectDirectory");
-                }
-                catch (ArgumentException)
-                {
-                    // Installer projects have a ProjectPath.
-                    prop = project.Properties.Item("ProjectPath");
-                }
-            }
-
-            return prop;
-        }
-
-        public static void LogToOutputPane(string message)
-        {
-            EnvDTE.Window window = _dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
-            OutputWindow outputWindow = (OutputWindow)window.Object;
-            var outputPane = outputWindow.OutputWindowPanes.Cast<OutputWindowPane>().FirstOrDefault(p => p.Name == "Debug");
-            if (outputPane != null)
-            {
-                outputPane.Activate();
-                outputPane.OutputString(message);
-            }
         }
     }
 }
