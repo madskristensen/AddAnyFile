@@ -9,7 +9,6 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 
@@ -18,18 +17,6 @@ namespace MadsKristensen.AddAnyFile
     public static class ProjectHelpers
     {
         static DTE2 _dte = AddAnyFilePackage._dte;
-
-        public static void CheckFileOutOfSourceControl(string file)
-        {
-            if (!File.Exists(file) || _dte.Solution.FindProjectItem(file) == null)
-                return;
-
-            if (_dte.SourceControl.IsItemUnderSCC(file) && !_dte.SourceControl.IsItemCheckedOut(file))
-                _dte.SourceControl.CheckOutItem(file);
-
-            var info = new FileInfo(file);
-            info.IsReadOnly = false;
-        }
 
         public static string GetRootNamespace(this Project project)
         {
@@ -43,24 +30,6 @@ namespace MadsKristensen.AddAnyFile
             catch { /* Project doesn't have a root namespace */ }
 
             return (project.Name ?? "").Replace(" ", "").Replace(".", "").Replace("-", "");
-        }
-
-        public static string GetFullPath(this ProjectItem item)
-        {
-            return item.Properties?.Item("FullPath")?.Value.ToString();
-        }
-
-        public static IEnumerable<ProjectItem> GetSelectedItems()
-        {
-            var items = (Array)_dte.ToolWindows.SolutionExplorer.SelectedItems;
-
-            foreach (UIHierarchyItem selItem in items)
-            {
-                var item = selItem.Object as ProjectItem;
-
-                if (item != null)
-                    yield return item;
-            }
         }
 
         public static string GetRootFolder(this Project project)
@@ -105,47 +74,9 @@ namespace MadsKristensen.AddAnyFile
             if (project.IsKind(ProjectTypes.ASPNET_5))
                 return _dte.Solution.FindProjectItem(file);
 
-            //if (_dte.Solution.FindProjectItem(file) == null)
-            //{
             ProjectItem item = project.ProjectItems.AddFromFile(file);
             item.SetItemType(itemType);
             return item;
-            //}
-        }
-
-        public static void AddFilesToProject(this Project project, IEnumerable<string> files)
-        {
-            if (project == null || project.IsKind(ProjectTypes.ASPNET_5))
-                return;
-
-            if (project.IsKind(ProjectTypes.WEBSITE_PROJECT))
-            {
-                var command = _dte.Commands.Item("SolutionExplorer.Refresh");
-
-                if (command.IsAvailable)
-                    _dte.ExecuteCommand(command.Name);
-
-                return;
-            }
-
-            var solutionService = Package.GetGlobalService(typeof(SVsSolution)) as IVsSolution;
-
-            IVsHierarchy hierarchy = null;
-            solutionService?.GetProjectOfUniqueName(project.UniqueName, out hierarchy);
-
-            if (hierarchy == null)
-                return;
-
-            var ip = (IVsProject)hierarchy;
-            var result = new VSADDRESULT[files.Count()];
-
-            ip.AddItem(VSConstants.VSITEMID_ROOT,
-                       VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE,
-                       string.Empty,
-                       (uint)files.Count(),
-                       files.ToArray(),
-                       IntPtr.Zero,
-                       result);
         }
 
         public static void SetItemType(this ProjectItem item, string itemType)
@@ -171,15 +102,6 @@ namespace MadsKristensen.AddAnyFile
         public static bool IsKind(this Project project, string kindGuid)
         {
             return project.Kind.Equals(kindGuid, StringComparison.OrdinalIgnoreCase);
-        }
-
-        public static IEnumerable<Project> GetAllProjects()
-        {
-            return _dte.Solution.Projects
-                  .Cast<Project>()
-                  .SelectMany(GetChildProjects)
-                  .Union(_dte.Solution.Projects.Cast<Project>())
-                  .Where(p => { try { return !string.IsNullOrEmpty(p.FullName); } catch { return false; } });
         }
 
         private static IEnumerable<Project> GetChildProjects(Project parent)
@@ -228,14 +150,6 @@ namespace MadsKristensen.AddAnyFile
             }
 
             return null;
-        }
-
-        public static bool IsKind(this ProjectItem item, string kindGuid)
-        {
-            if (item == null)
-                return false;
-
-            return item.Kind.Equals(kindGuid, StringComparison.OrdinalIgnoreCase);
         }
 
         public static IWpfTextView GetCurentTextView()
