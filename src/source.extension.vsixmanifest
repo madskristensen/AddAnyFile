@@ -4,11 +4,11 @@
         <Identity Id="2E78AA18-E864-4FBB-B8C8-6186FC865DB3" Version="3.0" Language="en-US" Publisher="Mads Kristensen" />
         <DisplayName>Add New File</DisplayName>
         <Description xml:space="preserve">The fastest and easiest way to add new files to any project - including files that start with a dot</Description>
-        <MoreInfo>https://github.com/madskristensen/AddAnyFile</MoreInfo>
-        <License>Resources\License.txt</License>
+        <MoreInfo>https://visualstudiogallery.msdn.microsoft.com/3f820e99-6c0d-41db-aa74-a18d9623b1f3</MoreInfo>
+        <License>Resources\LICENSE</License>
         <Icon>Resources\logo.png</Icon>
         <PreviewImage>Resources\preview.png</PreviewImage>
-        <Tags>file, add</Tags>
+        <Tags>file, add, template</Tags>
     </Metadata>
     <Installation InstalledByMsi="false">
         <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="11.0" />

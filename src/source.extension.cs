@@ -7,6 +7,6 @@ namespace MadsKristensen.AddAnyFile
 		public const string Description = "The fastest and easiest way to add new files to any project - including files that start with a dot";
 		public const string Version = "3.0";
 		public const string Author = "Mads Kristensen";
-		public const string Tags = "file, add";
+		public const string Tags = "file, add, template";
 	}
 }
