@@ -190,16 +190,16 @@
     <Content Include="Templates\package.json.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Templates\vb-class.txt">
+    <Content Include="Templates\.vb.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Templates\vb-interface.txt">
+    <Content Include="Templates\.vb-interface.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Templates\csharp-interface.txt">
+    <Content Include="Templates\.cs-interface.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Templates\csharp-class.txt">
+    <Content Include="Templates\.cs.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Resource Include="Resources\icon.png" />

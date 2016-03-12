@@ -20,16 +20,21 @@ namespace MadsKristensen.AddAnyFile
 
         public static string GetRootNamespace(this Project project)
         {
+            if (project == null)
+                return null;
+
+            string ns = project.Name ?? string.Empty;
+
             try
             {
                 var prop = project.Properties.Item("RootNamespace");
 
-                if (prop != null && prop.Value != null)
-                    return prop.Value.ToString();
+                if (prop != null && prop.Value != null && !string.IsNullOrEmpty(prop.Value.ToString()))
+                    ns = prop.Value.ToString();
             }
             catch { /* Project doesn't have a root namespace */ }
 
-            return (project.Name ?? "").Replace(" ", "").Replace(".", "").Replace("-", "");
+            return ns.Replace(" ", "").Replace(".", "").Replace("-", "");
         }
 
         public static string GetRootFolder(this Project project)

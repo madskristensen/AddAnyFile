@@ -36,26 +36,11 @@ namespace MadsKristensen.AddAnyFile
                 templateFile = GetTemplate(name);
             }
 
-            // Then look for C#/VB classes and interfaces
-            else if (extension == ".cs")
-            {
-                if (IsInterface(safeName))
-                    templateFile = GetTemplate("csharp-interface");
-                else
-                    templateFile = templateFile = GetTemplate("csharp-class");
-            }
-            else if (extension == ".vb")
-            {
-                if (IsInterface(safeName))
-                    templateFile = GetTemplate("vb-interface");
-                else
-                    templateFile = GetTemplate("vb-class");
-            }
-
             // Look for file extension matches
             else if (_templateFiles.Any(f => Path.GetFileName(f).Equals(extension + _defaultExt, StringComparison.OrdinalIgnoreCase)))
             {
-                templateFile = GetTemplate(extension);
+                var tmpl = AdjustForSpecific(safeName, extension);
+                templateFile = GetTemplate(tmpl);
             }
 
             return await ReplaceTokens(project, safeName, templateFile);
@@ -73,7 +58,8 @@ namespace MadsKristensen.AddAnyFile
 
             using (var reader = new StreamReader(templateFile))
             {
-                string ns = project.GetRootNamespace() ?? "MyNamespace";
+                string rootNs = project.GetRootNamespace();
+                string ns = string.IsNullOrEmpty(rootNs) ? "MyNamespace" : rootNs;
                 string content = await reader.ReadToEndAsync();
 
                 return content.Replace("{namespace}", ns)
@@ -81,9 +67,12 @@ namespace MadsKristensen.AddAnyFile
             }
         }
 
-        private static bool IsInterface(string name)
+        private static string AdjustForSpecific(string safeName, string extension)
         {
-            return Regex.IsMatch(name, "^I[A-Z].*");
+            if (Regex.IsMatch(safeName, "^I[A-Z].*"))
+                return extension += "-interface";
+
+            return extension;
         }
     }
 }
