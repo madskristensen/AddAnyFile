@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using EnvDTE;
+using Microsoft.VisualStudio.Shell;
 
 namespace MadsKristensen.AddAnyFile
 {
@@ -27,6 +28,7 @@ namespace MadsKristensen.AddAnyFile
             string extension = Path.GetExtension(file).ToLowerInvariant();
             string name = Path.GetFileName(file);
             string safeName = Path.GetFileNameWithoutExtension(file);
+            string relative = PackageUtilities.MakeRelative(project.GetRootFolder(), Path.GetDirectoryName(file));
 
             string templateFile = null;
 
@@ -43,7 +45,7 @@ namespace MadsKristensen.AddAnyFile
                 templateFile = GetTemplate(tmpl);
             }
 
-            return await ReplaceTokens(project, safeName, templateFile);
+            return await ReplaceTokens(project, safeName, relative, templateFile);
         }
 
         private static string GetTemplate(string name)
@@ -51,15 +53,21 @@ namespace MadsKristensen.AddAnyFile
             return Path.Combine(_folder, name + _defaultExt);
         }
 
-        private static async Task<string> ReplaceTokens(Project project, string name, string templateFile)
+        private static async Task<string> ReplaceTokens(Project project, string name, string relative, string templateFile)
         {
             if (string.IsNullOrEmpty(templateFile))
                 return templateFile;
 
+            string rootNs = project.GetRootNamespace();
+            string ns = string.IsNullOrEmpty(rootNs) ? "MyNamespace" : rootNs;
+
+            if (!string.IsNullOrEmpty(relative))
+            {
+                ns += "." + ProjectHelpers.CleanNameSpace(relative);
+            }
+
             using (var reader = new StreamReader(templateFile))
             {
-                string rootNs = project.GetRootNamespace();
-                string ns = string.IsNullOrEmpty(rootNs) ? "MyNamespace" : rootNs;
                 string content = await reader.ReadToEndAsync();
 
                 return content.Replace("{namespace}", ns)

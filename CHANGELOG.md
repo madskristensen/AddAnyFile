@@ -2,7 +2,7 @@
 
 - [x] Added changelog/roadmap
 - [x] Textbox too small with long folder name (#20)
-- [ ] C#/VB templates to include folder names (#21)
+- [x] C#/VB templates to include folder names (#21)
 
 Features that have a checkmark are complete and available for
 download in the
