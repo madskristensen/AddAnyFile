@@ -1,14 +1,18 @@
 # Add Any File
 
-A Visual Studio extension for easily adding new files to any project. Simply hit Shift+F2 to create an empty file in the
-selected folder or in the same folder as the selected file.
-
 [![Build status](https://ci.appveyor.com/api/projects/status/252jpryc38qah37x?svg=true)](https://ci.appveyor.com/project/madskristensen/addanyfile)
 
 Download the extension at the
 [VS Gallery](http://visualstudiogallery.msdn.microsoft.com/3f820e99-6c0d-41db-aa74-a18d9623b1f3)
 or get the
 [nightly build](http://vsixgallery.com/extension/27dd9dea-6dd2-403e-929d-3ff20d896c5e/)
+
+-------------------------------------------------
+
+A Visual Studio extension for easily adding new files to any project. Simply hit Shift+F2 to create an empty file in the
+selected folder or in the same folder as the selected file.
+
+See the [changelog](CHANGELOG.md) for updates and roadmap.
 
 ### Features
 
