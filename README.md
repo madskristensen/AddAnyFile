@@ -39,3 +39,16 @@ specify the structure.
 For example, by typing **scripts/test.js** in the dialog, the
 folder **scripts** is created if it doesn't exist and the file
 **test.js** is then placed into it.
+
+## Contribute
+Check out the [contribution guidelines](.github/CONTRIBUTING.md)
+if you want to contribute to this project.
+
+For cloning and building this project yourself, make sure
+to install the
+[Extensibility Tools 2015](https://visualstudiogallery.msdn.microsoft.com/ab39a092-1343-46e2-b0f1-6a3f91155aa6)
+extension for Visual Studio which enables some features
+used by this project.
+
+## License
+[Apache 2.0](LICENSE)
