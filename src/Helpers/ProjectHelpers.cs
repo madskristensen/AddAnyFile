@@ -34,15 +34,21 @@ namespace MadsKristensen.AddAnyFile
             }
             catch { /* Project doesn't have a root namespace */ }
 
-            return CleanNameSpace(ns);
+            return CleanNameSpace(ns, stripPeriods: false);
         }
 
-        public static string CleanNameSpace(string ns)
+        public static string CleanNameSpace(string ns, bool stripPeriods = true)
         {
-            return ns.Replace(" ", "")
-                     .Replace(".", "")
+            if (stripPeriods)
+            {
+                ns = ns.Replace(".", "");
+            }
+
+            ns = ns.Replace(" ", "")
                      .Replace("-", "")
                      .Replace("\\", ".");
+
+            return ns;
         }
 
         public static string GetRootFolder(this Project project)
