@@ -14,10 +14,7 @@ using MadsKristensen.AddAnyFile;
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]
-[assembly: NeutralResourcesLanguage("en-US")]
+[assembly: NeutralResourcesLanguage(Vsix.Language)]
 
 [assembly: AssemblyVersion(Vsix.Version)]
 [assembly: AssemblyFileVersion(Vsix.Version)]
-
-
-
