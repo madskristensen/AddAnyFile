@@ -108,7 +108,7 @@ namespace MadsKristensen.AddAnyFile
                             continue;
                         }
 
-                        var window = (Window2)_dte.ItemOperations.OpenFile(file);
+                        VsShellUtilities.OpenDocument(this, file);
 
                         // Move cursor into position
                         if (position > 0)
