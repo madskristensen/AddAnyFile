@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Interop;
+using System.Windows.Threading;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
@@ -121,6 +122,12 @@ namespace MadsKristensen.AddAnyFile
 
                         _dte.ExecuteCommand("SolutionExplorer.SyncWithActiveDocument");
                         _dte.ActiveDocument.Activate();
+
+                        await Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() =>
+                        {
+                            _dte.ExecuteCommand("Edit.FormatDocument");
+
+                        }), DispatcherPriority.SystemIdle, null);
                     }
                     catch (Exception ex)
                     {
