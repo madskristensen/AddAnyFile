@@ -1,7 +1,6 @@
 # Roadmap
 
 - [ ] Nothing currently on the roadmap
-- [x] Fixed crash when command is not available
 
 Features that have a checkmark are complete and available for
 download in the
@@ -11,6 +10,14 @@ download in the
 
 These are the changes to each version that has been released
 on the official Visual Studio extension gallery.
+
+## 3.2
+
+**2016-04-05**
+
+- [x] Fixed crash when command is not available
+- [x] Added culture to AssemblyInfo
+- [x] Using the Shell utils to open file
 
 ## 3.1
 
