@@ -125,7 +125,10 @@ namespace MadsKristensen.AddAnyFile
 
                         await Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() =>
                         {
-                            _dte.ExecuteCommand("Edit.FormatDocument");
+                            var command = _dte.Commands.Item("Edit.FormatDocument");
+
+                            if (command.IsAvailable)
+                                _dte.ExecuteCommand(command.Name);
 
                         }), DispatcherPriority.SystemIdle, null);
                     }
