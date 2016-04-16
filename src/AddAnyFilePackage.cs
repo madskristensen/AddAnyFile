@@ -30,8 +30,7 @@ namespace MadsKristensen.AddAnyFile
         {
             _dte = GetService(typeof(DTE)) as DTE2;
 
-            Logger.Initialize(this, Vsix.Name);
-            Telemetry.Initialize(_dte, Vsix.Version, "e146dff7-f7c5-49ab-a7d8-3557375f6624");
+            Logger.Initialize(this, Vsix.Name, Vsix.Version, "e146dff7-f7c5-49ab-a7d8-3557375f6624");
 
             base.Initialize();
 
