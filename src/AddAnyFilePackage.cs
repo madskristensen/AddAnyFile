@@ -219,7 +219,7 @@ namespace MadsKristensen.AddAnyFile
                 {
                     ProjectItem docItem = _dte.Solution.FindProjectItem(doc.FullName);
 
-                    if (docItem != null)
+                    if (docItem != null && docItem.Properties != null)
                     {
                         string fileName = docItem.Properties.Item("FullPath").Value.ToString();
                         if (File.Exists(fileName))
