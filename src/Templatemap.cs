@@ -18,7 +18,7 @@ namespace MadsKristensen.AddAnyFile
         static TemplateMap()
         {
             string assembly = Assembly.GetExecutingAssembly().Location;
-            _folder = Path.GetDirectoryName(assembly).ToLowerInvariant() + "\\Templates";
+            _folder = Path.Combine(Path.GetDirectoryName(assembly), "Templates");
             _templateFiles = Directory.GetFiles(_folder, "*" + _defaultExt, SearchOption.AllDirectories);
         }
 
