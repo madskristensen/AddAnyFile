@@ -26,11 +26,11 @@ namespace MadsKristensen.AddAnyFile
     {
         public static DTE2 _dte;
 
-        protected override void Initialize()
+        protected override void Initialize()   
         {
             _dte = GetService(typeof(DTE)) as DTE2;
 
-            Logger.Initialize(this, Vsix.Name, Vsix.Version, "e146dff7-f7c5-49ab-a7d8-3557375f6624");
+            Logger.Initialize(this, Vsix.Name);
 
             base.Initialize();
 
@@ -103,7 +103,6 @@ namespace MadsKristensen.AddAnyFile
 
                         if (file.EndsWith("__dummy__"))
                         {
-                            Telemetry.TrackEvent("Folder added");
                             projectItem.Delete();
                             continue;
                         }
@@ -121,15 +120,6 @@ namespace MadsKristensen.AddAnyFile
 
                         _dte.ExecuteCommand("SolutionExplorer.SyncWithActiveDocument");
                         _dte.ActiveDocument.Activate();
-
-                        await Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() =>
-                        {
-                            var command = _dte.Commands.Item("Edit.FormatDocument");
-
-                            if (command.IsAvailable)
-                                _dte.ExecuteCommand(command.Name);
-
-                        }), DispatcherPriority.SystemIdle, null);
                     }
                     catch (Exception ex)
                     {
@@ -150,7 +140,6 @@ namespace MadsKristensen.AddAnyFile
             string template = await TemplateMap.GetTemplateFilePath(project, file);
 
             var props = new Dictionary<string, string>() { { "extension", extension.ToLowerInvariant() } };
-            Telemetry.TrackEvent("File added", props);
 
             if (!string.IsNullOrEmpty(template))
             {

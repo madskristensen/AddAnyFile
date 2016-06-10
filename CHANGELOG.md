@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Re-implemented the error logger
+- [ ] Fixed end-of-line
 - [ ] Add file to solution
 
 Features that have a checkmark are complete and available for
