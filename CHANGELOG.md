@@ -1,8 +1,5 @@
 # Roadmap
 
-- [x] Re-implemented the error logger
-- [x] Fixed end-of-line
-- [x] No longer add new file to SSDT projects. Requires manual include
 - [ ] Add file to solution
 
 Features that have a checkmark are complete and available for
@@ -13,6 +10,14 @@ download in the
 
 These are the changes to each version that has been released
 on the official Visual Studio extension gallery.
+
+## 3.4
+
+**2016-06-10**
+
+- [x] Re-implemented the error logger
+- [x] Fixed end-of-line
+- [x] No longer add new file to SSDT projects. Requires manual include
 
 ## 3.3
 
