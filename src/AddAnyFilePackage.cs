@@ -103,7 +103,7 @@ namespace MadsKristensen.AddAnyFile
 
                         if (file.EndsWith("__dummy__"))
                         {
-                            projectItem.Delete();
+                            projectItem?.Delete();
                             continue;
                         }
 

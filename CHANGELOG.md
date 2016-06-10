@@ -1,7 +1,8 @@
 # Roadmap
 
 - [x] Re-implemented the error logger
-- [ ] Fixed end-of-line
+- [x] Fixed end-of-line
+- [x] No longer add new file to SSDT projects. Requires manual include
 - [ ] Add file to solution
 
 Features that have a checkmark are complete and available for
