@@ -135,7 +135,6 @@ namespace MadsKristensen.AddAnyFile
 
         private static async Task<int> WriteFile(Project project, string file)
         {
-            Encoding encoding = new UTF8Encoding(false);
             string extension = Path.GetExtension(file);
             string template = await TemplateMap.GetTemplateFilePath(project, file);
 
@@ -146,18 +145,18 @@ namespace MadsKristensen.AddAnyFile
                 int index = template.IndexOf('$');
                 template = template.Remove(index, 1);
 
-                await WriteToDisk(file, template, encoding);
+                await WriteToDisk(file, template);
                 return index;
             }
 
-            await WriteToDisk(file, string.Empty, encoding);
+            await WriteToDisk(file, string.Empty);
 
             return 0;
         }
 
-        private static async System.Threading.Tasks.Task WriteToDisk(string file, string content, Encoding encoding)
+        private static async System.Threading.Tasks.Task WriteToDisk(string file, string content)
         {
-            using (var writer = new StreamWriter(file, false, encoding))
+            using (var writer = new StreamWriter(file, false, new UTF8Encoding(false)))
             {
                 await writer.WriteAsync(content);
             }

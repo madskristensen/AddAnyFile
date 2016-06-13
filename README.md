@@ -5,7 +5,7 @@
 Download the extension at the
 [VS Gallery](http://visualstudiogallery.msdn.microsoft.com/3f820e99-6c0d-41db-aa74-a18d9623b1f3)
 or get the
-[nightly build](http://vsixgallery.com/extension/27dd9dea-6dd2-403e-929d-3ff20d896c5e/)
+[nightly build](http://vsixgallery.com/extension/2E78AA18-E864-4FBB-B8C8-6186FC865DB3/)
 
 -------------------------------------------------
 
