@@ -44,7 +44,8 @@ namespace MadsKristensen.AddAnyFile
                 templateFile = GetTemplate(tmpl);
             }
 
-            return await ReplaceTokens(project, safeName, relative, templateFile);
+            string template = await ReplaceTokens(project, safeName, relative, templateFile);
+            return NormalizeLineEndings(template);
         }
 
         private static string GetTemplate(string name)
@@ -72,6 +73,14 @@ namespace MadsKristensen.AddAnyFile
                 return content.Replace("{namespace}", ns)
                               .Replace("{itemname}", name);
             }
+        }
+
+        private static string NormalizeLineEndings(string content)
+        {
+            if (string.IsNullOrEmpty(content))
+                return content;
+
+            return Regex.Replace(content, @"\r\n|\n\r|\n|\r", "\r\n");
         }
 
         private static string AdjustForSpecific(string safeName, string extension)
