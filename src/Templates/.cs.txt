@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace {namespace}
 {
-    class {itemname}
+    public class {itemname}
     {
         $
     }

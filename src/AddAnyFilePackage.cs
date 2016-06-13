@@ -26,7 +26,7 @@ namespace MadsKristensen.AddAnyFile
     {
         public static DTE2 _dte;
 
-        protected override void Initialize()   
+        protected override void Initialize()
         {
             _dte = GetService(typeof(DTE)) as DTE2;
 
@@ -145,12 +145,22 @@ namespace MadsKristensen.AddAnyFile
             {
                 int index = template.IndexOf('$');
                 template = template.Remove(index, 1);
-                File.WriteAllText(file, template, encoding);
+
+                await WriteToDisk(file, template, encoding);
                 return index;
             }
 
-            File.WriteAllText(file, string.Empty, encoding);
+            await WriteToDisk(file, string.Empty, encoding);
+
             return 0;
+        }
+
+        private static async System.Threading.Tasks.Task WriteToDisk(string file, string content, Encoding encoding)
+        {
+            using (var writer = new StreamWriter(file, false, encoding))
+            {
+                await writer.WriteAsync(content);
+            }
         }
 
         static string[] GetParsedInput(string input)
