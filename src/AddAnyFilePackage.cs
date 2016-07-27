@@ -132,10 +132,10 @@ namespace MadsKristensen.AddAnyFile
                 if (index > -1)
                 {
                     template = template.Remove(index, 1);
-
-                    await WriteToDisk(file, template);
-                    return index;
                 }
+
+                await WriteToDisk(file, template);
+                return index;
             }
 
             await WriteToDisk(file, string.Empty);
