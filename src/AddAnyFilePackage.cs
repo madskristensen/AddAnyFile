@@ -39,21 +39,8 @@ namespace MadsKristensen.AddAnyFile
             {
                 CommandID menuCommandID = new CommandID(PackageGuids.guidAddAnyFileCmdSet, PackageIds.cmdidMyCommand);
                 var menuItem = new OleMenuCommand(MenuItemCallback, menuCommandID);
-                menuItem.BeforeQueryStatus += MenuItem_BeforeQueryStatus;
                 mcs.AddCommand(menuItem);
             }
-        }
-
-        private void MenuItem_BeforeQueryStatus(object sender, EventArgs e)
-        {
-            var button = (OleMenuCommand)sender;
-            button.Visible = button.Enabled = false;
-
-            UIHierarchyItem item = GetSelectedItem();
-            var project = item.Object as Project;
-
-            if (project == null || !project.Kind.Equals(EnvDTE.Constants.vsProjectKindSolutionItems, StringComparison.OrdinalIgnoreCase))
-                button.Visible = button.Enabled = true;
         }
 
         private async void MenuItemCallback(object sender, EventArgs e)
@@ -137,8 +124,6 @@ namespace MadsKristensen.AddAnyFile
         {
             string extension = Path.GetExtension(file);
             string template = await TemplateMap.GetTemplateFilePath(project, file);
-
-            var props = new Dictionary<string, string>() { { "extension", extension.ToLowerInvariant() } };
 
             if (!string.IsNullOrEmpty(template))
             {
@@ -237,7 +222,7 @@ namespace MadsKristensen.AddAnyFile
 
             if (projectItem != null)
             {
-                string fileName = projectItem.FileNames[0];
+                string fileName = projectItem.FileNames[1];
 
                 if (File.Exists(fileName))
                 {

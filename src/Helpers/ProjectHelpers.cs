@@ -53,7 +53,13 @@ namespace MadsKristensen.AddAnyFile
 
         public static string GetRootFolder(this Project project)
         {
-            if (project == null || string.IsNullOrEmpty(project.FullName))
+            if (project == null)
+                return null;
+
+            if (project.IsKind(ProjectKinds.vsProjectKindSolutionFolder))
+                return Path.GetDirectoryName(_dte.Solution.FullName);
+
+            if (string.IsNullOrEmpty(project.FullName))
                 return null;
 
             string fullPath;
