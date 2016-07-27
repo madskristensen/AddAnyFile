@@ -143,10 +143,14 @@ namespace MadsKristensen.AddAnyFile
             if (!string.IsNullOrEmpty(template))
             {
                 int index = template.IndexOf('$');
-                template = template.Remove(index, 1);
 
-                await WriteToDisk(file, template);
-                return index;
+                if (index > -1)
+                {
+                    template = template.Remove(index, 1);
+
+                    await WriteToDisk(file, template);
+                    return index;
+                }
             }
 
             await WriteToDisk(file, string.Empty);
@@ -156,7 +160,7 @@ namespace MadsKristensen.AddAnyFile
 
         private static async System.Threading.Tasks.Task WriteToDisk(string file, string content)
         {
-            using (var writer = new StreamWriter(file, false, new UTF8Encoding(false)))
+            using (var writer = new StreamWriter(file, false, new UTF8Encoding(true)))
             {
                 await writer.WriteAsync(content);
             }
