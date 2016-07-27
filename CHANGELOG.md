@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Add file to solution
+- [ ] Nothing yet...
 
 Features that have a checkmark are complete and available for
 download in the
@@ -10,6 +10,13 @@ download in the
 
 These are the changes to each version that has been released
 on the official Visual Studio extension gallery.
+
+## 3.5
+
+**2016-07-27**
+
+- [x] Support for solution 
+- [x] Fixed UTF8 BOM issue
 
 ## 3.4
 
