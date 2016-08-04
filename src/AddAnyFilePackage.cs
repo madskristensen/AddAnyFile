@@ -8,7 +8,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Interop;
-using System.Windows.Threading;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
@@ -145,10 +144,21 @@ namespace MadsKristensen.AddAnyFile
 
         private static async System.Threading.Tasks.Task WriteToDisk(string file, string content)
         {
-            using (var writer = new StreamWriter(file, false, new UTF8Encoding(true)))
+            using (var writer = new StreamWriter(file, false, GetFileEncoding(file)))
             {
                 await writer.WriteAsync(content);
             }
+        }
+
+        private static Encoding GetFileEncoding(string file)
+        {
+            string[] noBom = { ".cmd", ".bat", ".json" };
+            string ext = Path.GetExtension(file).ToLowerInvariant();
+
+            if (noBom.Contains(ext))
+                return new UTF8Encoding(false);
+
+            return new UTF8Encoding(true);
         }
 
         static string[] GetParsedInput(string input)
