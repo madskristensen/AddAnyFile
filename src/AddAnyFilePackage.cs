@@ -11,13 +11,11 @@ using System.Windows.Interop;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 
 namespace MadsKristensen.AddAnyFile
 {
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
     [InstalledProductRegistration("#110", "#112", Vsix.Version, IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [Guid(PackageGuids.guidAddAnyFilePkgString)]
@@ -30,8 +28,6 @@ namespace MadsKristensen.AddAnyFile
             _dte = GetService(typeof(DTE)) as DTE2;
 
             Logger.Initialize(this, Vsix.Name);
-
-            base.Initialize();
 
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (null != mcs)
