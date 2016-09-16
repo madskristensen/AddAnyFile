@@ -1,12 +1,13 @@
-# Roadmap
+# Road map
 
 - [ ] Nothing yet...
+- [x] Fix for paths above project folder (#37)
 
 Features that have a checkmark are complete and available for
 download in the
 [nightly build](http://vsixgallery.com/extension/2E78AA18-E864-4FBB-B8C8-6186FC865DB3/).
 
-# Changelog
+# Change log
 
 These are the changes to each version that has been released
 on the official Visual Studio extension gallery.

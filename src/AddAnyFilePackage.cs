@@ -70,26 +70,26 @@ namespace MadsKristensen.AddAnyFile
                     input = input + "__dummy__";
                 }
 
-                string file = Path.Combine(folder, input);
-                string dir = Path.GetDirectoryName(file);
+                var file = new FileInfo(Path.Combine(folder, input));
+                string dir = file.DirectoryName;
 
                 PackageUtilities.EnsureOutputPath(dir);
 
-                if (!File.Exists(file))
+                if (!file.Exists)
                 {
-                    int position = await WriteFile(project, file);
+                    int position = await WriteFile(project, file.FullName);
 
                     try
                     {
                         var projectItem = project.AddFileToProject(file);
 
-                        if (file.EndsWith("__dummy__"))
+                        if (file.FullName.EndsWith("__dummy__"))
                         {
                             projectItem?.Delete();
                             continue;
                         }
 
-                        VsShellUtilities.OpenDocument(this, file);
+                        VsShellUtilities.OpenDocument(this, file.FullName);
 
                         // Move cursor into position
                         if (position > 0)

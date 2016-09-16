@@ -94,12 +94,17 @@ namespace MadsKristensen.AddAnyFile
             return null;
         }
 
-        public static ProjectItem AddFileToProject(this Project project, string file, string itemType = null)
+        public static ProjectItem AddFileToProject(this Project project, FileInfo file, string itemType = null)
         {
             if (project.IsKind(ProjectTypes.ASPNET_5, ProjectTypes.SSDT))
-                return _dte.Solution.FindProjectItem(file);
+                return _dte.Solution.FindProjectItem(file.FullName);
 
-            ProjectItem item = project.ProjectItems.AddFromFile(file);
+            var root = project.GetRootFolder();
+
+            if (string.IsNullOrEmpty(root) || !file.FullName.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            ProjectItem item = project.ProjectItems.AddFromFile(file.FullName);
             item.SetItemType(itemType);
             return item;
         }
