@@ -9,6 +9,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 
@@ -209,6 +210,42 @@ namespace MadsKristensen.AddAnyFile
         public static IComponentModel GetComponentModel()
         {
             return (IComponentModel)AddAnyFilePackage.GetGlobalService(typeof(SComponentModel));
+        }
+
+        public static object GetSelectedItem()
+        {
+            IntPtr hierarchyPointer, selectionContainerPointer;
+            object selectedObject = null;
+            IVsMultiItemSelect multiItemSelect;
+            uint itemId;
+
+            var monitorSelection = (IVsMonitorSelection)Package.GetGlobalService(typeof(SVsShellMonitorSelection));
+
+            try
+            {
+                monitorSelection.GetCurrentSelection(out hierarchyPointer,
+                                                 out itemId,
+                                                 out multiItemSelect,
+                                                 out selectionContainerPointer);
+
+                IVsHierarchy selectedHierarchy = Marshal.GetTypedObjectForIUnknown(
+                                                     hierarchyPointer,
+                                                     typeof(IVsHierarchy)) as IVsHierarchy;
+
+                if (selectedHierarchy != null)
+                {
+                    ErrorHandler.ThrowOnFailure(selectedHierarchy.GetProperty(itemId, (int)__VSHPROPID.VSHPROPID_ExtObject, out selectedObject));
+                }
+
+                Marshal.Release(hierarchyPointer);
+                Marshal.Release(selectionContainerPointer);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.Write(ex);
+            }
+
+            return selectedObject;
         }
     }
 

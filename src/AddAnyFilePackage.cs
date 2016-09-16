@@ -40,17 +40,16 @@ namespace MadsKristensen.AddAnyFile
 
         private async void MenuItemCallback(object sender, EventArgs e)
         {
-            UIHierarchyItem item = GetSelectedItem();
-
-            if (item == null)
-                return;
-
-            string folder = FindFolder(item);
+            var item = ProjectHelpers.GetSelectedItem();
+            var folder = FindFolder(item);
 
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
                 return;
 
-            Project project = ProjectHelpers.GetActiveProject();
+            var selectedItem = item as ProjectItem;
+            var selectedProject = item as Project;
+            var project = selectedItem?.ContainingProject ?? selectedProject ?? ProjectHelpers.GetActiveProject();
+
             if (project == null)
                 return;
 
@@ -168,7 +167,7 @@ namespace MadsKristensen.AddAnyFile
 
             while (match.Success)
             {
-                // Alwasy 4 matches w. Group[3] being the extension, extension list, folder terminator ("/" or "\"), or empty string
+                // Always 4 matches w. Group[3] being the extension, extension list, folder terminator ("/" or "\"), or empty string
                 string path = match.Groups[1].Value.Trim() + match.Groups[2].Value;
                 string[] extensions = match.Groups[3].Value.Split(',');
 
@@ -176,7 +175,7 @@ namespace MadsKristensen.AddAnyFile
                 {
                     string value = path + ext.Trim();
 
-                    // ensure "file.(txt,,txt)" or "file.txt,,file.txt,File.TXT" retuns as just ["file.txt"]
+                    // ensure "file.(txt,,txt)" or "file.txt,,file.txt,File.TXT" returns as just ["file.txt"]
                     if (value != "" && !value.EndsWith(".", StringComparison.Ordinal) && !results.Contains(value, StringComparer.OrdinalIgnoreCase))
                     {
                         results.Add(value);
@@ -200,8 +199,11 @@ namespace MadsKristensen.AddAnyFile
             return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
         }
 
-        private static string FindFolder(UIHierarchyItem item)
+        private static string FindFolder(object item)
         {
+            if (item == null)
+                return null;
+
             Window2 window = _dte.ActiveWindow as Window2;
 
             if (window != null && window.Type == vsWindowType.vsWindowTypeDocument)
@@ -223,8 +225,8 @@ namespace MadsKristensen.AddAnyFile
 
             string folder = null;
 
-            ProjectItem projectItem = item.Object as ProjectItem;
-            Project project = item.Object as Project;
+            ProjectItem projectItem = item as ProjectItem;
+            Project project = item as Project;
 
             if (projectItem != null)
             {
@@ -245,18 +247,6 @@ namespace MadsKristensen.AddAnyFile
             }
 
             return folder;
-        }
-
-        private static UIHierarchyItem GetSelectedItem()
-        {
-            var items = (Array)_dte.ToolWindows.SolutionExplorer.SelectedItems;
-
-            foreach (UIHierarchyItem selItem in items)
-            {
-                return selItem;
-            }
-
-            return null;
         }
     }
 }

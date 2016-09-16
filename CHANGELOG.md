@@ -2,6 +2,7 @@
 
 - [ ] Nothing yet...
 - [x] Fix for paths above project folder (#37)
+- [x] Fix for multi-project scenarios (#35)
 
 Features that have a checkmark are complete and available for
 download in the
