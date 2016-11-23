@@ -80,7 +80,19 @@ namespace MadsKristensen.AddAnyFile
 
                     try
                     {
-                        var projectItem = project.AddFileToProject(file);
+                        ProjectItem projectItem = null;
+                        var projItem = item as ProjectItem;
+                        if (projItem != null)
+                        {
+                            if (EnvDTE.Constants.vsProjectItemKindVirtualFolder == projItem.Kind)
+                            {
+                                projectItem = projItem.ProjectItems.AddFromFile(file.FullName);
+                            }
+                        }
+                        if (projectItem == null)
+                        {
+                            projectItem = project.AddFileToProject(file);
+                        }
 
                         if (file.FullName.EndsWith("__dummy__"))
                         {
@@ -226,26 +238,41 @@ namespace MadsKristensen.AddAnyFile
             string folder = null;
 
             ProjectItem projectItem = item as ProjectItem;
-            Project project = item as Project;
-
-            if (projectItem != null)
+            if (projectItem != null && EnvDTE.Constants.vsProjectItemKindVirtualFolder == projectItem.Kind)
             {
-                string fileName = projectItem.FileNames[1];
-
-                if (File.Exists(fileName))
+                var items = projectItem.ProjectItems;
+                foreach (ProjectItem it in items)
                 {
-                    folder = Path.GetDirectoryName(fileName);
-                }
-                else
-                {
-                    folder = fileName;
+                    if (File.Exists(it.FileNames[1]))
+                    {
+                        folder = Path.GetDirectoryName(it.FileNames[1]);
+                        break;
+                    }
                 }
             }
-            else if (project != null)
+            else
             {
-                folder = project.GetRootFolder();
-            }
+                Project project = item as Project;
+                if (projectItem != null)
+                {
+                    string fileName = projectItem.FileNames[1];
 
+                    if (File.Exists(fileName))
+                    {
+                        folder = Path.GetDirectoryName(fileName);
+                    }
+                    else
+                    {
+                        folder = fileName;
+                    }
+
+
+                }
+                else if (project != null)
+                {
+                    folder = project.GetRootFolder();
+                }
+            }
             return folder;
         }
     }
