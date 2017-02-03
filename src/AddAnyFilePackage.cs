@@ -97,6 +97,7 @@ namespace MadsKristensen.AddAnyFile
                         if (file.FullName.EndsWith("__dummy__"))
                         {
                             projectItem?.Delete();
+                            file.Delete();
                             continue;
                         }
 
