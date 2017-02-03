@@ -97,7 +97,7 @@ namespace MadsKristensen.AddAnyFile
 
         public static ProjectItem AddFileToProject(this Project project, FileInfo file, string itemType = null)
         {
-            if (project.IsKind(ProjectTypes.ASPNET_5, ProjectTypes.DOTNET_Core, ProjectTypes.SSDT))
+            if (project.IsKind(ProjectTypes.ASPNET_5, ProjectTypes.SSDT))
                 return _dte.Solution.FindProjectItem(file.FullName);
 
             var root = project.GetRootFolder();
