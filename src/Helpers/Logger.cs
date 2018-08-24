@@ -1,4 +1,6 @@
 using System;
+using Task = System.Threading.Tasks.Task;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
 internal static class Logger
@@ -32,7 +34,7 @@ internal static class Logger
     {
         if (_pane == null)
         {
-            Guid guid = Guid.NewGuid();
+            var guid = Guid.NewGuid();
             _output.CreatePane(ref guid, _name, 1, 1);
             _output.GetPane(ref guid, out _pane);
         }

@@ -11,7 +11,7 @@ namespace MadsKristensen.AddAnyFile
 {
     static class TemplateMap
     {
-        static string _folder;
+        static readonly string _folder;
         static readonly string[] _templateFiles;
         const string _defaultExt = ".txt";
 
@@ -22,7 +22,7 @@ namespace MadsKristensen.AddAnyFile
             _templateFiles = Directory.GetFiles(_folder, "*" + _defaultExt, SearchOption.AllDirectories);
         }
 
-        public static async Task<string> GetTemplateFilePath(Project project, string file)
+        public static async Task<string> GetTemplateFilePathAsync(Project project, string file)
         {
             string extension = Path.GetExtension(file).ToLowerInvariant();
             string name = Path.GetFileName(file);
@@ -40,11 +40,11 @@ namespace MadsKristensen.AddAnyFile
             // Look for file extension matches
             else if (_templateFiles.Any(f => Path.GetFileName(f).Equals(extension + _defaultExt, StringComparison.OrdinalIgnoreCase)))
             {
-                var tmpl = AdjustForSpecific(safeName, extension);
+                string tmpl = AdjustForSpecific(safeName, extension);
                 templateFile = GetTemplate(tmpl);
             }
 
-            string template = await ReplaceTokens(project, safeName, relative, templateFile);
+            string template = await ReplaceTokensAsync(project, safeName, relative, templateFile);
             return NormalizeLineEndings(template);
         }
 
@@ -53,7 +53,7 @@ namespace MadsKristensen.AddAnyFile
             return Path.Combine(_folder, name + _defaultExt);
         }
 
-        private static async Task<string> ReplaceTokens(Project project, string name, string relative, string templateFile)
+        private static async Task<string> ReplaceTokensAsync(Project project, string name, string relative, string templateFile)
         {
             if (string.IsNullOrEmpty(templateFile))
                 return templateFile;

@@ -28,7 +28,7 @@ namespace MadsKristensen.AddAnyFile
 
             try
             {
-                var prop = project.Properties.Item("RootNamespace");
+                Property prop = project.Properties.Item("RootNamespace");
 
                 if (prop != null && prop.Value != null && !string.IsNullOrEmpty(prop.Value.ToString()))
                     ns = prop.Value.ToString();
@@ -57,7 +57,7 @@ namespace MadsKristensen.AddAnyFile
             if (project == null)
                 return null;
 
-            if (project.IsKind(ProjectKinds.vsProjectKindSolutionFolder))
+            if (project.IsKind("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}")) //ProjectKinds.vsProjectKindSolutionFolder
                 return Path.GetDirectoryName(_dte.Solution.FullName);
 
             if (string.IsNullOrEmpty(project.FullName))
@@ -100,7 +100,7 @@ namespace MadsKristensen.AddAnyFile
             if (project.IsKind(ProjectTypes.ASPNET_5, ProjectTypes.SSDT))
                 return _dte.Solution.FindProjectItem(file.FullName);
 
-            var root = project.GetRootFolder();
+            string root = project.GetRootFolder();
 
             if (string.IsNullOrEmpty(root) || !file.FullName.StartsWith(root, StringComparison.OrdinalIgnoreCase))
                 return null;
@@ -132,7 +132,7 @@ namespace MadsKristensen.AddAnyFile
 
         public static bool IsKind(this Project project, params string[] kindGuids)
         {
-            foreach (var guid in kindGuids)
+            foreach (string guid in kindGuids)
             {
                 if (project.Kind.Equals(guid, StringComparison.OrdinalIgnoreCase))
                     return true;
@@ -145,7 +145,7 @@ namespace MadsKristensen.AddAnyFile
         {
             try
             {
-                if (!parent.IsKind(ProjectKinds.vsProjectKindSolutionFolder) && parent.Collection == null)  // Unloaded
+                if (!parent.IsKind("{66A26720-8FB5-11D2-AA7E-00C04F688DDE}") && parent.Collection == null)  // Unloaded
                     return Enumerable.Empty<Project>();
 
                 if (!string.IsNullOrEmpty(parent.FullName))
@@ -166,16 +166,15 @@ namespace MadsKristensen.AddAnyFile
         {
             try
             {
-                var activeSolutionProjects = _dte.ActiveSolutionProjects as Array;
 
-                if (activeSolutionProjects != null && activeSolutionProjects.Length > 0)
+                if (_dte.ActiveSolutionProjects is Array activeSolutionProjects && activeSolutionProjects.Length > 0)
                     return activeSolutionProjects.GetValue(0) as Project;
 
-                var doc = _dte.ActiveDocument;
+                Document doc = _dte.ActiveDocument;
 
                 if (doc != null && !string.IsNullOrEmpty(doc.FullName))
                 {
-                    var item = (_dte.Solution != null) ? _dte.Solution.FindProjectItem(doc.FullName) : null;
+                    ProjectItem item = _dte.Solution?.FindProjectItem(doc.FullName);
 
                     if (item != null)
                         return item.ContainingProject;
@@ -191,9 +190,9 @@ namespace MadsKristensen.AddAnyFile
 
         public static IWpfTextView GetCurentTextView()
         {
-            var componentModel = GetComponentModel();
+            IComponentModel componentModel = GetComponentModel();
             if (componentModel == null) return null;
-            var editorAdapter = componentModel.GetService<IVsEditorAdaptersFactoryService>();
+            IVsEditorAdaptersFactoryService editorAdapter = componentModel.GetService<IVsEditorAdaptersFactoryService>();
 
             return editorAdapter.GetWpfTextView(GetCurrentNativeTextView());
         }
@@ -202,8 +201,7 @@ namespace MadsKristensen.AddAnyFile
         {
             var textManager = (IVsTextManager)ServiceProvider.GlobalProvider.GetService(typeof(SVsTextManager));
 
-            IVsTextView activeView = null;
-            ErrorHandler.ThrowOnFailure(textManager.GetActiveView(1, null, out activeView));
+            ErrorHandler.ThrowOnFailure(textManager.GetActiveView(1, null, out IVsTextView activeView));
             return activeView;
         }
 
@@ -214,25 +212,21 @@ namespace MadsKristensen.AddAnyFile
 
         public static object GetSelectedItem()
         {
-            IntPtr hierarchyPointer, selectionContainerPointer;
             object selectedObject = null;
-            IVsMultiItemSelect multiItemSelect;
-            uint itemId;
 
             var monitorSelection = (IVsMonitorSelection)Package.GetGlobalService(typeof(SVsShellMonitorSelection));
 
             try
             {
-                monitorSelection.GetCurrentSelection(out hierarchyPointer,
-                                                 out itemId,
-                                                 out multiItemSelect,
-                                                 out selectionContainerPointer);
+                monitorSelection.GetCurrentSelection(out IntPtr hierarchyPointer,
+                                                 out uint itemId,
+                                                 out IVsMultiItemSelect multiItemSelect,
+                                                 out IntPtr selectionContainerPointer);
 
-                IVsHierarchy selectedHierarchy = Marshal.GetTypedObjectForIUnknown(
+
+                if (Marshal.GetTypedObjectForIUnknown(
                                                      hierarchyPointer,
-                                                     typeof(IVsHierarchy)) as IVsHierarchy;
-
-                if (selectedHierarchy != null)
+                                                     typeof(IVsHierarchy)) is IVsHierarchy selectedHierarchy)
                 {
                     ErrorHandler.ThrowOnFailure(selectedHierarchy.GetProperty(itemId, (int)__VSHPROPID.VSHPROPID_ExtObject, out selectedObject));
                 }

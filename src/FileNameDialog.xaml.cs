@@ -61,7 +61,7 @@ namespace MadsKristensen.AddAnyFile
 
         private void SetRandomTip()
         {
-            Random rnd = new Random(DateTime.Now.GetHashCode());
+            var rnd = new Random(DateTime.Now.GetHashCode());
             int index = rnd.Next(_tips.Count);
             lblTips.Content = _tips[index];
         }

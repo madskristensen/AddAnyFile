@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Interop;
 using EnvDTE;
@@ -15,40 +16,41 @@ using Microsoft.VisualStudio.Text;
 
 namespace MadsKristensen.AddAnyFile
 {
-    [PackageRegistration(UseManagedResourcesOnly = true)]
+    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", Vsix.Version, IconResourceID = 400)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [Guid(PackageGuids.guidAddAnyFilePkgString)]
-    public sealed class AddAnyFilePackage : ExtensionPointPackage
+    public sealed class AddAnyFilePackage : AsyncPackage
     {
         public static DTE2 _dte;
 
-        protected override void Initialize()
+        protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
-            _dte = GetService(typeof(DTE)) as DTE2;
+            await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            Logger.Initialize(this, Vsix.Name);
+            _dte = await GetServiceAsync(typeof(DTE)) as DTE2;
 
-            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (null != mcs)
+             Logger.Initialize(this, Vsix.Name);
+
+            if (await GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService mcs)
             {
-                CommandID menuCommandID = new CommandID(PackageGuids.guidAddAnyFileCmdSet, PackageIds.cmdidMyCommand);
-                var menuItem = new OleMenuCommand(MenuItemCallback, menuCommandID);
+                var menuCommandID = new CommandID(PackageGuids.guidAddAnyFileCmdSet, PackageIds.cmdidMyCommand);
+                var menuItem = new OleMenuCommand(ExecuteAsync, menuCommandID);
                 mcs.AddCommand(menuItem);
             }
         }
 
-        private async void MenuItemCallback(object sender, EventArgs e)
+        private async void ExecuteAsync(object sender, EventArgs e)
         {
-            var item = ProjectHelpers.GetSelectedItem();
-            var folder = FindFolder(item);
+            object item = ProjectHelpers.GetSelectedItem();
+            string folder = FindFolder(item);
 
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
                 return;
 
             var selectedItem = item as ProjectItem;
             var selectedProject = item as Project;
-            var project = selectedItem?.ContainingProject ?? selectedProject ?? ProjectHelpers.GetActiveProject();
+            Project project = selectedItem?.ContainingProject ?? selectedProject ?? ProjectHelpers.GetActiveProject();
 
             if (project == null)
                 return;
@@ -76,15 +78,14 @@ namespace MadsKristensen.AddAnyFile
 
                 if (!file.Exists)
                 {
-                    int position = await WriteFile(project, file.FullName);
+                    int position = await WriteFileAsync(project, file.FullName);
 
                     try
                     {
                         ProjectItem projectItem = null;
-                        var projItem = item as ProjectItem;
-                        if (projItem != null)
+                        if (item is ProjectItem projItem)
                         {
-                            if (EnvDTE.Constants.vsProjectItemKindVirtualFolder == projItem.Kind)
+                            if ("{6BB5F8F0-4483-11D3-8BCF-00C04F8EC28C}" == projItem.Kind) // Constants.vsProjectItemKindVirtualFolder
                             {
                                 projectItem = projItem.ProjectItems.AddFromFile(file.FullName);
                             }
@@ -105,7 +106,7 @@ namespace MadsKristensen.AddAnyFile
                         // Move cursor into position
                         if (position > 0)
                         {
-                            var view = ProjectHelpers.GetCurentTextView();
+                            Microsoft.VisualStudio.Text.Editor.IWpfTextView view = ProjectHelpers.GetCurentTextView();
 
                             if (view != null)
                                 view.Caret.MoveTo(new SnapshotPoint(view.TextBuffer.CurrentSnapshot, position));
@@ -126,10 +127,10 @@ namespace MadsKristensen.AddAnyFile
             }
         }
 
-        private static async Task<int> WriteFile(Project project, string file)
+        private static async Task<int> WriteFileAsync(Project project, string file)
         {
             string extension = Path.GetExtension(file);
-            string template = await TemplateMap.GetTemplateFilePath(project, file);
+            string template = await TemplateMap.GetTemplateFilePathAsync(project, file);
 
             if (!string.IsNullOrEmpty(template))
             {
@@ -140,16 +141,16 @@ namespace MadsKristensen.AddAnyFile
                     template = template.Remove(index, 1);
                 }
 
-                await WriteToDisk(file, template);
+                await WriteToDiskAsync(file, template);
                 return index;
             }
 
-            await WriteToDisk(file, string.Empty);
+            await WriteToDiskAsync(file, string.Empty);
 
             return 0;
         }
 
-        private static async System.Threading.Tasks.Task WriteToDisk(string file, string content)
+        private static async System.Threading.Tasks.Task WriteToDiskAsync(string file, string content)
         {
             using (var writer = new StreamWriter(file, false, GetFileEncoding(file)))
             {
@@ -173,8 +174,8 @@ namespace MadsKristensen.AddAnyFile
             // var tests = new string[] { "file1.txt", "file1.txt, file2.txt", ".ignore", ".ignore.(old,new)", "license", "folder/",
             //    "folder\\", "folder\\file.txt", "folder/.thing", "page.aspx.cs", "widget-1.(html,js)", "pages\\home.(aspx, aspx.cs)",
             //    "home.(html,js), about.(html,js,css)", "backup.2016.(old, new)", "file.(txt,txt,,)", "file_@#d+|%.3-2...3^&.txt" };
-            Regex pattern = new Regex(@"[,]?([^(,]*)([\.\/\\]?)[(]?((?<=[^(])[^,]*|[^)]+)[)]?");
-            List<string> results = new List<string>();
+            var pattern = new Regex(@"[,]?([^(,]*)([\.\/\\]?)[(]?((?<=[^(])[^,]*|[^)]+)[)]?");
+            var results = new List<string>();
             Match match = pattern.Match(input);
 
             while (match.Success)
@@ -200,14 +201,14 @@ namespace MadsKristensen.AddAnyFile
 
         private string PromptForFileName(string folder)
         {
-            DirectoryInfo dir = new DirectoryInfo(folder);
+            var dir = new DirectoryInfo(folder);
             var dialog = new FileNameDialog(dir.Name);
 
             var hwnd = new IntPtr(_dte.MainWindow.HWnd);
             var window = (System.Windows.Window)HwndSource.FromHwnd(hwnd).RootVisual;
             dialog.Owner = window;
 
-            var result = dialog.ShowDialog();
+            bool? result = dialog.ShowDialog();
             return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
         }
 
@@ -216,9 +217,8 @@ namespace MadsKristensen.AddAnyFile
             if (item == null)
                 return null;
 
-            Window2 window = _dte.ActiveWindow as Window2;
 
-            if (window != null && window.Type == vsWindowType.vsWindowTypeDocument)
+            if (_dte.ActiveWindow is Window2 window && window.Type == vsWindowType.vsWindowTypeDocument)
             {
                 // if a document is active, use the document's containing directory
                 Document doc = _dte.ActiveDocument;
@@ -237,10 +237,10 @@ namespace MadsKristensen.AddAnyFile
 
             string folder = null;
 
-            ProjectItem projectItem = item as ProjectItem;
-            if (projectItem != null && EnvDTE.Constants.vsProjectItemKindVirtualFolder == projectItem.Kind)
+            var projectItem = item as ProjectItem;
+            if (projectItem != null && "{6BB5F8F0-4483-11D3-8BCF-00C04F8EC28C}" == projectItem.Kind) //Constants.vsProjectItemKindVirtualFolder
             {
-                var items = projectItem.ProjectItems;
+                ProjectItems items = projectItem.ProjectItems;
                 foreach (ProjectItem it in items)
                 {
                     if (File.Exists(it.FileNames[1]))
@@ -252,7 +252,7 @@ namespace MadsKristensen.AddAnyFile
             }
             else
             {
-                Project project = item as Project;
+                var project = item as Project;
                 if (projectItem != null)
                 {
                     string fileName = projectItem.FileNames[1];
