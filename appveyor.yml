@@ -15,7 +15,7 @@ after_test:
   - ps: Vsix-PushArtifacts | Vsix-PublishToGallery
 
 before_deploy:
-  - ps: Vsix-CreateChocolatyPackage -packageId addnewfile
+  - ps: Vsix-CreateChocolatyPackage -packageId webessentials2019
 
 deploy:
   - provider: Environment
