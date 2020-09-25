@@ -8,7 +8,7 @@
         <License>Resources\LICENSE</License>
         <ReleaseNotes>https://github.com/madskristensen/AddAnyFile/blob/master/CHANGELOG.md</ReleaseNotes>
         <Icon>Resources\logo.png</Icon>
-        <PreviewImage>Resources\preview.png</PreviewImage>
+        <PreviewImage>Resources\logo.png</PreviewImage>
         <Tags>file, add, template</Tags>
     </Metadata>
     <Installation InstalledByMsi="false">

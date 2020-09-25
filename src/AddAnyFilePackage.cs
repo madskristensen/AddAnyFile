@@ -2,6 +2,7 @@
 
 using EnvDTE80;
 
+using Microsoft;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 
@@ -33,6 +34,7 @@ namespace MadsKristensen.AddAnyFile
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			_dte = await GetServiceAsync(typeof(DTE)) as DTE2;
+			Assumes.Present(_dte);
 
 			Logger.Initialize(this, Vsix.Name);
 

@@ -132,9 +132,6 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Resource Include="Resources\icon.png" />
-    <Content Include="Resources\preview.png">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\LICENSE">
