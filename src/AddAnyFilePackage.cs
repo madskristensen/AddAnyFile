@@ -111,11 +111,11 @@ namespace MadsKristensen.AddAnyFile
 
 				if (!file.Exists)
 				{
-					int position = await WriteFileAsync(project, file.FullName);
-
 					try
 					{
+						int position = await WriteFileAsync(project, file.FullName);
 						ProjectItem projectItem = null;
+
 						if (item is ProjectItem projItem)
 						{
 							if ("{6BB5F8F0-4483-11D3-8BCF-00C04F8EC28C}" == projItem.Kind) // Constants.vsProjectItemKindVirtualFolder
