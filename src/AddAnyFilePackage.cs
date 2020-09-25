@@ -99,6 +99,12 @@ namespace MadsKristensen.AddAnyFile
 					continue;
 				}
 
+				if (!IsFileNameValid(file.Name))
+				{
+					MessageBox.Show($"The file name '{file.Name}' is a system reserved name.", Vsix.Name, MessageBoxButton.OK, MessageBoxImage.Error);
+					continue;
+				}
+
 				string dir = file.DirectoryName;
 
 				PackageUtilities.EnsureOutputPath(dir);
@@ -154,6 +160,12 @@ namespace MadsKristensen.AddAnyFile
 					System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
 				}
 			}
+		}
+
+		private static bool IsFileNameValid(string fileName)
+		{
+			string[] list = new[] { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "COM0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "LPT0" };
+			return !list.Contains(fileName, StringComparer.OrdinalIgnoreCase);
 		}
 
 		private static async Task<int> WriteFileAsync(Project project, string file)
