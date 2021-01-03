@@ -158,6 +158,19 @@ namespace MadsKristensen.AddAnyFile
 			}
 		}
 
+		public static string GetFileName(this ProjectItem item)
+		{
+			try
+			{
+				return item?.Properties?.Item("FullPath").Value?.ToString();
+			}
+			catch (ArgumentException)
+			{
+				// The property does not exist.
+				return null;
+			}
+		}
+
 		public static bool IsKind(this Project project, params string[] kindGuids)
 		{
 			foreach (string guid in kindGuids)
