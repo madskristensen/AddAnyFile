@@ -171,6 +171,23 @@ namespace MadsKristensen.AddAnyFile
 			}
 		}
 
+		public static Project FindSolutionFolder(this Solution solution, string name)
+		{
+			return solution.Projects.OfType<Project>()
+					.Where(p => p.IsKind(EnvDTE.Constants.vsProjectKindSolutionItems))
+					.Where(p => p.Name == name)
+					.FirstOrDefault();
+		}
+
+		public static Project FindSolutionFolder(this Project project, string name)
+		{
+			return project.ProjectItems.OfType<ProjectItem>()
+					.Where(p => p.IsKind(EnvDTE.Constants.vsProjectItemKindSolutionItems))
+					.Where(p => p.Name == name)
+					.Select(p => p.SubProject)
+					.FirstOrDefault();
+		}
+
 		public static bool IsKind(this Project project, params string[] kindGuids)
 		{
 			foreach (string guid in kindGuids)
