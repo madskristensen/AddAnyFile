@@ -171,6 +171,19 @@ namespace MadsKristensen.AddAnyFile
 			return false;
 		}
 
+		public static bool IsKind(this ProjectItem projectItem, params string[] kindGuids)
+		{
+			foreach (string guid in kindGuids)
+			{
+				if (projectItem.Kind.Equals(guid, StringComparison.OrdinalIgnoreCase))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		private static IEnumerable<Project> GetChildProjects(Project parent)
 		{
 			try
