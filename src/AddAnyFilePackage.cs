@@ -27,6 +27,8 @@ namespace MadsKristensen.AddAnyFile
 	[Guid(PackageGuids.guidAddAnyFilePkgString)]
 	public sealed class AddAnyFilePackage : AsyncPackage
 	{
+		private const string SolutionItemsProjectName = "Solution Items";
+
 		public static DTE2 _dte;
 
 		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
@@ -48,24 +50,19 @@ namespace MadsKristensen.AddAnyFile
 
 		private async void ExecuteAsync(object sender, EventArgs e)
 		{
-			object item = ProjectHelpers.GetSelectedItem();
-			string folder = FindFolder(item);
+			NewItemTarget target = NewItemTarget.Create(_dte);
 
-			if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+			if (target == null)
 			{
+				MessageBox.Show(
+						"Could not determine where to create the new file. Select a file or folder in Solution Explorer and try again.",
+						Vsix.Name,
+						MessageBoxButton.OK,
+						MessageBoxImage.Error);
 				return;
 			}
 
-			ProjectItem selectedItem = item as ProjectItem;
-			Project selectedProject = item as Project;
-			Project project = selectedItem?.ContainingProject ?? selectedProject ?? ProjectHelpers.GetActiveProject();
-
-			if (project == null)
-			{
-				return;
-			}
-
-			string input = PromptForFileName(folder).TrimStart('/', '\\').Replace("/", "\\");
+			string input = PromptForFileName(target.Directory).TrimStart('/', '\\').Replace("/", "\\");
 
 			if (string.IsNullOrEmpty(input))
 			{
@@ -74,93 +71,122 @@ namespace MadsKristensen.AddAnyFile
 
 			string[] parsedInputs = GetParsedInput(input);
 
-			foreach (string inputItem in parsedInputs)
+			foreach (string name in parsedInputs)
 			{
-				input = inputItem;
-
-				if (input.EndsWith("\\", StringComparison.Ordinal))
-				{
-					input = input + "__dummy__";
-				}
-
-				FileInfo file = null;
-
 				try
 				{
-					file = new FileInfo(Path.Combine(folder, input));
+					await AddItemAsync(name, target);
 				}
 				catch (PathTooLongException ex)
 				{
 					MessageBox.Show("The file name is too long 😢", Vsix.Name, MessageBoxButton.OK, MessageBoxImage.Error);
 					Logger.Log(ex);
-					continue;
 				}
 				catch (Exception ex)
 				{
 					Logger.Log(ex);
-					continue;
+					MessageBox.Show(
+							$"Error creating file '{name}':{Environment.NewLine}{ex.Message}",
+							Vsix.Name,
+							MessageBoxButton.OK,
+							MessageBoxImage.Error);
 				}
+			}
+		}
 
-				if (!IsFileNameValid(file.Name))
+		private async System.Threading.Tasks.Task AddItemAsync(string name, NewItemTarget target)
+		{
+			if (name.EndsWith("\\", StringComparison.Ordinal))
+			{
+				if (target.IsSolutionOrSolutionFolder)
 				{
-					MessageBox.Show($"The file name '{file.Name}' is a system reserved name.", Vsix.Name, MessageBoxButton.OK, MessageBoxImage.Error);
-					continue;
-				}
-
-				string dir = file.DirectoryName;
-
-				PackageUtilities.EnsureOutputPath(dir);
-
-				if (!file.Exists)
-				{
-					try
-					{
-						int position = await WriteFileAsync(project, file.FullName);
-						ProjectItem projectItem = null;
-
-						if (item is ProjectItem projItem)
-						{
-							if ("{6BB5F8F0-4483-11D3-8BCF-00C04F8EC28C}" == projItem.Kind) // Constants.vsProjectItemKindVirtualFolder
-							{
-								projectItem = projItem.ProjectItems.AddFromFile(file.FullName);
-							}
-						}
-						if (projectItem == null)
-						{
-							projectItem = project.AddFileToProject(file);
-						}
-
-						if (file.FullName.EndsWith("__dummy__"))
-						{
-							projectItem?.Delete();
-							continue;
-						}
-
-						VsShellUtilities.OpenDocument(this, file.FullName);
-
-						// Move cursor into position
-						if (position > 0)
-						{
-							Microsoft.VisualStudio.Text.Editor.IWpfTextView view = ProjectHelpers.GetCurentTextView();
-
-							if (view != null)
-							{
-								view.Caret.MoveTo(new SnapshotPoint(view.TextBuffer.CurrentSnapshot, position));
-							}
-						}
-
-						_dte.ExecuteCommand("SolutionExplorer.SyncWithActiveDocument");
-						_dte.ActiveDocument.Activate();
-					}
-					catch (Exception ex)
-					{
-						Logger.Log(ex);
-					}
+					GetOrAddSolutionFolder(name, target);
 				}
 				else
 				{
-					System.Windows.Forms.MessageBox.Show("The file '" + file + "' already exist.");
+					AddProjectFolder(name, target);
 				}
+			}
+			else
+			{
+				await AddFileAsync(name, target);
+			}
+		}
+
+		private async System.Threading.Tasks.Task AddFileAsync(string name, NewItemTarget target)
+		{
+			FileInfo file;
+
+
+			// If the file is being added to a solution folder, but that
+			// solution folder doesn't have a corresponding directory on
+			// disk, then write the file to the root of the solution instead.
+			if (target.IsSolutionFolder && !Directory.Exists(target.Directory))
+			{
+				file = new FileInfo(Path.Combine(Path.GetDirectoryName(_dte.Solution.FullName), Path.GetFileName(name)));
+			}
+			else
+			{
+				file = new FileInfo(Path.Combine(target.Directory, name));
+			}
+
+			if (!IsFileNameValid(file.Name))
+			{
+				MessageBox.Show($"The file name '{file.Name}' is a system reserved name.", Vsix.Name, MessageBoxButton.OK, MessageBoxImage.Error);
+				return;
+			}
+
+			PackageUtilities.EnsureOutputPath(file.DirectoryName);
+
+			if (!file.Exists)
+			{
+				try
+				{
+					Project project;
+
+					if (target.IsSolutionOrSolutionFolder)
+					{
+						project = GetOrAddSolutionFolder(Path.GetDirectoryName(name), target);
+					}
+					else
+					{
+						project = target.Project;
+					}
+
+					int position = await WriteFileAsync(project, file.FullName);
+					if (target.ProjectItem != null && target.ProjectItem.IsKind(Constants.vsProjectItemKindVirtualFolder))
+					{
+						target.ProjectItem.ProjectItems.AddFromFile(file.FullName);
+					}
+					else
+					{
+						project.AddFileToProject(file);
+					}
+
+					VsShellUtilities.OpenDocument(this, file.FullName);
+
+					// Move cursor into position.
+					if (position > 0)
+					{
+						Microsoft.VisualStudio.Text.Editor.IWpfTextView view = ProjectHelpers.GetCurentTextView();
+
+						if (view != null)
+						{
+							view.Caret.MoveTo(new SnapshotPoint(view.TextBuffer.CurrentSnapshot, position));
+						}
+					}
+
+					_dte.ExecuteCommand("SolutionExplorer.SyncWithActiveDocument");
+					_dte.ActiveDocument.Activate();
+				}
+				catch (Exception ex)
+				{
+					Logger.Log(ex);
+				}
+			}
+			else
+			{
+				MessageBox.Show($"The file '{file}' already exists.", Vsix.Name, MessageBoxButton.OK, MessageBoxImage.Information);
 			}
 		}
 
@@ -214,6 +240,81 @@ namespace MadsKristensen.AddAnyFile
 			return new UTF8Encoding(true);
 		}
 
+		private Project GetOrAddSolutionFolder(string name, NewItemTarget target)
+		{
+			if (target.IsSolution && string.IsNullOrEmpty(name))
+			{
+				// An empty solution folder name means we are not creating any solution 
+				// folders for that item, and the file we are adding is intended to be 
+				// added to the solution. Files cannot be added directly to the solution,
+				// so there is a "Solution Items" folder that they are added to.
+				return _dte.Solution.FindSolutionFolder(SolutionItemsProjectName)
+						?? ((Solution2)_dte.Solution).AddSolutionFolder(SolutionItemsProjectName);
+			}
+
+			// Even though solution folders are always virtual, if the target directory exists,
+			// then we will also create the new directory on disk. This ensures that any files
+			// that are added to this folder will end up in the corresponding physical directory.
+			if (Directory.Exists(target.Directory))
+			{
+				PackageUtilities.EnsureOutputPath(Path.Combine(target.Directory, name));
+			}
+
+			Project parent = target.Project;
+
+			foreach (string segment in SplitPath(name))
+			{
+				// If we don't have a parent project yet, 
+				// then this folder is added to the solution.
+				if (parent == null)
+				{
+					parent = _dte.Solution.FindSolutionFolder(segment) ?? ((Solution2)_dte.Solution).AddSolutionFolder(segment);
+				}
+				else
+				{
+					parent = parent.FindSolutionFolder(segment) ?? ((SolutionFolder)parent.Object).AddSolutionFolder(segment);
+				}
+			}
+
+			return parent;
+		}
+
+		private void AddProjectFolder(string name, NewItemTarget target)
+		{
+			// Make sure the directory exists before we add it to the project.
+			PackageUtilities.EnsureOutputPath(Path.Combine(target.Directory, name));
+
+			// We can't just add the final directory to the project because that will 
+			// only add the final segment rather than adding each segment in the path.
+			// Split the name into segments and add each folder individually.
+			ProjectItems items = target.ProjectItem?.ProjectItems ?? target.Project.ProjectItems;
+			string parentDirectory = target.Directory;
+
+			foreach (string segment in SplitPath(name))
+			{
+				parentDirectory = Path.Combine(parentDirectory, segment);
+
+				// Look for an existing folder in case it's already in the project.
+				ProjectItem folder = items
+						.OfType<ProjectItem>()
+						.Where(item => segment.Equals(item.Name, StringComparison.OrdinalIgnoreCase))
+						.Where(item => item.IsKind(Constants.vsProjectItemKindPhysicalFolder, Constants.vsProjectItemKindVirtualFolder))
+						.FirstOrDefault();
+
+				if (folder == null)
+				{
+					folder = items.AddFromDirectory(parentDirectory);
+				}
+
+				items = folder.ProjectItems;
+			}
+		}
+
+		private static string[] SplitPath(string path)
+		{
+			return path.Split(new[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+		}
+
 		private static string[] GetParsedInput(string input)
 		{
 			// var tests = new string[] { "file1.txt", "file1.txt, file2.txt", ".ignore", ".ignore.(old,new)", "license", "folder/",
@@ -255,73 +356,6 @@ namespace MadsKristensen.AddAnyFile
 
 			bool? result = dialog.ShowDialog();
 			return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
-		}
-
-		private static string FindFolder(object item)
-		{
-			if (item == null)
-			{
-				return null;
-			}
-
-			if (_dte.ActiveWindow is Window2 window && window.Type == vsWindowType.vsWindowTypeDocument)
-			{
-				// if a document is active, use the document's containing directory
-				Document doc = _dte.ActiveDocument;
-				if (doc != null && !string.IsNullOrEmpty(doc.FullName))
-				{
-					ProjectItem docItem = _dte.Solution.FindProjectItem(doc.FullName);
-
-					if (docItem != null && docItem.Properties != null)
-					{
-						string fileName = docItem.Properties.Item("FullPath").Value.ToString();
-						if (File.Exists(fileName))
-						{
-							return Path.GetDirectoryName(fileName);
-						}
-					}
-				}
-			}
-
-			string folder = null;
-
-			ProjectItem projectItem = item as ProjectItem;
-			if (projectItem != null && "{6BB5F8F0-4483-11D3-8BCF-00C04F8EC28C}" == projectItem.Kind) //Constants.vsProjectItemKindVirtualFolder
-			{
-				ProjectItems items = projectItem.ProjectItems;
-				foreach (ProjectItem it in items)
-				{
-					if (File.Exists(it.FileNames[1]))
-					{
-						folder = Path.GetDirectoryName(it.FileNames[1]);
-						break;
-					}
-				}
-			}
-			else
-			{
-				Project project = item as Project;
-				if (projectItem != null)
-				{
-					string fileName = projectItem.FileNames[1];
-
-					if (File.Exists(fileName))
-					{
-						folder = Path.GetDirectoryName(fileName);
-					}
-					else
-					{
-						folder = fileName;
-					}
-
-
-				}
-				else if (project != null)
-				{
-					folder = project.GetRootFolder();
-				}
-			}
-			return folder;
 		}
 	}
 }
