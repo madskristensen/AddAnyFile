@@ -17,6 +17,16 @@
         </Buttons>
     </Commands>
 
+    <CommandPlacements>
+        <CommandPlacement guid="guidAddAnyFileCmdSet" id="cmdidMyCommand" priority="0x0200">
+            <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_SOLUTION_ADD_ITEM"/>
+        </CommandPlacement>
+
+        <CommandPlacement guid="guidAddAnyFileCmdSet" id="cmdidMyCommand" priority="0x0200">
+            <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_SLNFLDR_ADD_ITEM"/>
+        </CommandPlacement>
+    </CommandPlacements>
+
     <KeyBindings>
         <KeyBinding guid="guidAddAnyFileCmdSet" id="cmdidMyCommand" mod1="Shift" key1="VK_F2" editor="guidVSStd97"/>
     </KeyBindings>
