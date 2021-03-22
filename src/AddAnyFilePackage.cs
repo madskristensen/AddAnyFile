@@ -176,7 +176,7 @@ namespace MadsKristensen.AddAnyFile
 						}
 					}
 
-					_dte.ExecuteCommand("SolutionExplorer.SyncWithActiveDocument");
+					ExecuteCommandIfAvailable("SolutionExplorer.SyncWithActiveDocument");
 					_dte.ActiveDocument.Activate();
 				}
 				catch (Exception ex)
@@ -356,6 +356,26 @@ namespace MadsKristensen.AddAnyFile
 
 			bool? result = dialog.ShowDialog();
 			return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
+		}
+
+		private void ExecuteCommandIfAvailable(string commandName)
+		{
+			Command command;
+
+			try
+			{
+				command = _dte.Commands.Item(commandName);
+			}
+			catch (ArgumentException)
+			{
+				// The command does not exist, so we can't execute it.
+				return;
+			}
+
+			if (command.IsAvailable)
+			{
+				_dte.ExecuteCommand(commandName);
+			}
 		}
 	}
 }
