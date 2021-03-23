@@ -28,6 +28,8 @@ namespace MadsKristensen.AddAnyFile
 	public sealed class AddAnyFilePackage : AsyncPackage
 	{
 		private const string SolutionItemsProjectName = "Solution Items";
+		private static readonly Regex ReservedFileNamePattern = new Regex($@"(?i)^(PRN|AUX|NUL|CON|COM\d|LPT\d)(\.|$)");
+		private static readonly HashSet<char> InvalidFileNameChars = new HashSet<char>(Path.GetInvalidFileNameChars());
 
 		public static DTE2 _dte;
 
@@ -96,6 +98,10 @@ namespace MadsKristensen.AddAnyFile
 
 		private async System.Threading.Tasks.Task AddItemAsync(string name, NewItemTarget target)
 		{
+			// The naming rules that apply to files created on disk also apply to virtual solution folders,
+			// so regardless of what type of item we are creating, we need to validate the name.
+			ValidatePath(name);
+
 			if (name.EndsWith("\\", StringComparison.Ordinal))
 			{
 				if (target.IsSolutionOrSolutionFolder)
@@ -113,6 +119,26 @@ namespace MadsKristensen.AddAnyFile
 			}
 		}
 
+		private void ValidatePath(string path)
+		{
+			do
+			{
+				string name = Path.GetFileName(path);
+
+				if (ReservedFileNamePattern.IsMatch(name))
+				{
+					throw new InvalidOperationException($"The name '{name}' is a system reserved name.");
+				}
+
+				if (name.Any(c => InvalidFileNameChars.Contains(c)))
+				{
+					throw new InvalidOperationException($"The name '{name}' contains invalid characters.");
+				}
+
+				path = Path.GetDirectoryName(path);
+			} while (!string.IsNullOrEmpty(path));
+		}
+
 		private async System.Threading.Tasks.Task AddFileAsync(string name, NewItemTarget target)
 		{
 			FileInfo file;
@@ -128,12 +154,6 @@ namespace MadsKristensen.AddAnyFile
 			else
 			{
 				file = new FileInfo(Path.Combine(target.Directory, name));
-			}
-
-			if (!IsFileNameValid(file.Name))
-			{
-				MessageBox.Show($"The file name '{file.Name}' is a system reserved name.", Vsix.Name, MessageBoxButton.OK, MessageBoxImage.Error);
-				return;
 			}
 
 			// Make sure the directory exists before we create the file. Don't use
@@ -183,12 +203,6 @@ namespace MadsKristensen.AddAnyFile
 			{
 				MessageBox.Show($"The file '{file}' already exists.", Vsix.Name, MessageBoxButton.OK, MessageBoxImage.Information);
 			}
-		}
-
-		private static bool IsFileNameValid(string fileName)
-		{
-			string[] list = new[] { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "COM0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "LPT0" };
-			return !list.Contains(fileName, StringComparer.OrdinalIgnoreCase);
 		}
 
 		private static async Task<int> WriteFileAsync(Project project, string file)
