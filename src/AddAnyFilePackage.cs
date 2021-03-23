@@ -136,7 +136,9 @@ namespace MadsKristensen.AddAnyFile
 				return;
 			}
 
-			PackageUtilities.EnsureOutputPath(file.DirectoryName);
+			// Make sure the directory exists before we create the file. Don't use
+			// `PackageUtilities.EnsureOutputPath()` because it can silently fail.
+			Directory.CreateDirectory(file.DirectoryName);
 
 			if (!file.Exists)
 			{
@@ -250,7 +252,8 @@ namespace MadsKristensen.AddAnyFile
 			// that are added to this folder will end up in the corresponding physical directory.
 			if (Directory.Exists(target.Directory))
 			{
-				PackageUtilities.EnsureOutputPath(Path.Combine(target.Directory, name));
+				// Don't use `PackageUtilities.EnsureOutputPath()` because it can silently fail.
+				Directory.CreateDirectory(Path.Combine(target.Directory, name));
 			}
 
 			Project parent = target.Project;
@@ -274,8 +277,9 @@ namespace MadsKristensen.AddAnyFile
 
 		private void AddProjectFolder(string name, NewItemTarget target)
 		{
-			// Make sure the directory exists before we add it to the project.
-			PackageUtilities.EnsureOutputPath(Path.Combine(target.Directory, name));
+			// Make sure the directory exists before we add it to the project. Don't
+			// use `PackageUtilities.EnsureOutputPath()` because it can silently fail.
+			Directory.CreateDirectory(Path.Combine(target.Directory, name));
 
 			// We can't just add the final directory to the project because that will 
 			// only add the final segment rather than adding each segment in the path.
