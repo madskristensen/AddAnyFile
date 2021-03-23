@@ -1,4 +1,4 @@
-﻿using EnvDTE;
+using EnvDTE;
 
 using EnvDTE80;
 
@@ -140,49 +140,42 @@ namespace MadsKristensen.AddAnyFile
 
 			if (!file.Exists)
 			{
-				try
+				Project project;
+
+				if (target.IsSolutionOrSolutionFolder)
 				{
-					Project project;
-
-					if (target.IsSolutionOrSolutionFolder)
-					{
-						project = GetOrAddSolutionFolder(Path.GetDirectoryName(name), target);
-					}
-					else
-					{
-						project = target.Project;
-					}
-
-					int position = await WriteFileAsync(project, file.FullName);
-					if (target.ProjectItem != null && target.ProjectItem.IsKind(Constants.vsProjectItemKindVirtualFolder))
-					{
-						target.ProjectItem.ProjectItems.AddFromFile(file.FullName);
-					}
-					else
-					{
-						project.AddFileToProject(file);
-					}
-
-					VsShellUtilities.OpenDocument(this, file.FullName);
-
-					// Move cursor into position.
-					if (position > 0)
-					{
-						Microsoft.VisualStudio.Text.Editor.IWpfTextView view = ProjectHelpers.GetCurentTextView();
-
-						if (view != null)
-						{
-							view.Caret.MoveTo(new SnapshotPoint(view.TextBuffer.CurrentSnapshot, position));
-						}
-					}
-
-					ExecuteCommandIfAvailable("SolutionExplorer.SyncWithActiveDocument");
-					_dte.ActiveDocument.Activate();
+					project = GetOrAddSolutionFolder(Path.GetDirectoryName(name), target);
 				}
-				catch (Exception ex)
+				else
 				{
-					Logger.Log(ex);
+					project = target.Project;
 				}
+
+				int position = await WriteFileAsync(project, file.FullName);
+				if (target.ProjectItem != null && target.ProjectItem.IsKind(Constants.vsProjectItemKindVirtualFolder))
+				{
+					target.ProjectItem.ProjectItems.AddFromFile(file.FullName);
+				}
+				else
+				{
+					project.AddFileToProject(file);
+				}
+
+				VsShellUtilities.OpenDocument(this, file.FullName);
+
+				// Move cursor into position.
+				if (position > 0)
+				{
+					Microsoft.VisualStudio.Text.Editor.IWpfTextView view = ProjectHelpers.GetCurentTextView();
+
+					if (view != null)
+					{
+						view.Caret.MoveTo(new SnapshotPoint(view.TextBuffer.CurrentSnapshot, position));
+					}
+				}
+
+				ExecuteCommandIfAvailable("SolutionExplorer.SyncWithActiveDocument");
+				_dte.ActiveDocument.Activate();
 			}
 			else
 			{
