@@ -1,8 +1,9 @@
-using EnvDTE;
+﻿using EnvDTE;
 
 using EnvDTE80;
 
 using Microsoft;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 
@@ -79,12 +80,7 @@ namespace MadsKristensen.AddAnyFile
 				{
 					await AddItemAsync(name, target);
 				}
-				catch (PathTooLongException ex)
-				{
-					MessageBox.Show("The file name is too long 😢", Vsix.Name, MessageBoxButton.OK, MessageBoxImage.Error);
-					Logger.Log(ex);
-				}
-				catch (Exception ex)
+				catch (Exception ex) when (!ErrorHandler.IsCriticalException(ex))
 				{
 					Logger.Log(ex);
 					MessageBox.Show(
