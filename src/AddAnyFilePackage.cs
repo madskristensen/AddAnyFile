@@ -3,6 +3,7 @@
 using EnvDTE80;
 
 using Microsoft;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 
@@ -28,6 +29,8 @@ namespace MadsKristensen.AddAnyFile
 	public sealed class AddAnyFilePackage : AsyncPackage
 	{
 		private const string SolutionItemsProjectName = "Solution Items";
+		private static readonly Regex ReservedFileNamePattern = new Regex($@"(?i)^(PRN|AUX|NUL|CON|COM\d|LPT\d)(\.|$)");
+		private static readonly HashSet<char> InvalidFileNameChars = new HashSet<char>(Path.GetInvalidFileNameChars());
 
 		public static DTE2 _dte;
 
@@ -77,12 +80,7 @@ namespace MadsKristensen.AddAnyFile
 				{
 					await AddItemAsync(name, target);
 				}
-				catch (PathTooLongException ex)
-				{
-					MessageBox.Show("The file name is too long 😢", Vsix.Name, MessageBoxButton.OK, MessageBoxImage.Error);
-					Logger.Log(ex);
-				}
-				catch (Exception ex)
+				catch (Exception ex) when (!ErrorHandler.IsCriticalException(ex))
 				{
 					Logger.Log(ex);
 					MessageBox.Show(
@@ -96,6 +94,10 @@ namespace MadsKristensen.AddAnyFile
 
 		private async System.Threading.Tasks.Task AddItemAsync(string name, NewItemTarget target)
 		{
+			// The naming rules that apply to files created on disk also apply to virtual solution folders,
+			// so regardless of what type of item we are creating, we need to validate the name.
+			ValidatePath(name);
+
 			if (name.EndsWith("\\", StringComparison.Ordinal))
 			{
 				if (target.IsSolutionOrSolutionFolder)
@@ -111,6 +113,26 @@ namespace MadsKristensen.AddAnyFile
 			{
 				await AddFileAsync(name, target);
 			}
+		}
+
+		private void ValidatePath(string path)
+		{
+			do
+			{
+				string name = Path.GetFileName(path);
+
+				if (ReservedFileNamePattern.IsMatch(name))
+				{
+					throw new InvalidOperationException($"The name '{name}' is a system reserved name.");
+				}
+
+				if (name.Any(c => InvalidFileNameChars.Contains(c)))
+				{
+					throw new InvalidOperationException($"The name '{name}' contains invalid characters.");
+				}
+
+				path = Path.GetDirectoryName(path);
+			} while (!string.IsNullOrEmpty(path));
 		}
 
 		private async System.Threading.Tasks.Task AddFileAsync(string name, NewItemTarget target)
@@ -130,70 +152,53 @@ namespace MadsKristensen.AddAnyFile
 				file = new FileInfo(Path.Combine(target.Directory, name));
 			}
 
-			if (!IsFileNameValid(file.Name))
-			{
-				MessageBox.Show($"The file name '{file.Name}' is a system reserved name.", Vsix.Name, MessageBoxButton.OK, MessageBoxImage.Error);
-				return;
-			}
-
-			PackageUtilities.EnsureOutputPath(file.DirectoryName);
+			// Make sure the directory exists before we create the file. Don't use
+			// `PackageUtilities.EnsureOutputPath()` because it can silently fail.
+			Directory.CreateDirectory(file.DirectoryName);
 
 			if (!file.Exists)
 			{
-				try
+				Project project;
+
+				if (target.IsSolutionOrSolutionFolder)
 				{
-					Project project;
-
-					if (target.IsSolutionOrSolutionFolder)
-					{
-						project = GetOrAddSolutionFolder(Path.GetDirectoryName(name), target);
-					}
-					else
-					{
-						project = target.Project;
-					}
-
-					int position = await WriteFileAsync(project, file.FullName);
-					if (target.ProjectItem != null && target.ProjectItem.IsKind(Constants.vsProjectItemKindVirtualFolder))
-					{
-						target.ProjectItem.ProjectItems.AddFromFile(file.FullName);
-					}
-					else
-					{
-						project.AddFileToProject(file);
-					}
-
-					VsShellUtilities.OpenDocument(this, file.FullName);
-
-					// Move cursor into position.
-					if (position > 0)
-					{
-						Microsoft.VisualStudio.Text.Editor.IWpfTextView view = ProjectHelpers.GetCurentTextView();
-
-						if (view != null)
-						{
-							view.Caret.MoveTo(new SnapshotPoint(view.TextBuffer.CurrentSnapshot, position));
-						}
-					}
-
-					ExecuteCommandIfAvailable("SolutionExplorer.SyncWithActiveDocument");
-					_dte.ActiveDocument.Activate();
+					project = GetOrAddSolutionFolder(Path.GetDirectoryName(name), target);
 				}
-				catch (Exception ex)
+				else
 				{
-					Logger.Log(ex);
+					project = target.Project;
 				}
+
+				int position = await WriteFileAsync(project, file.FullName);
+				if (target.ProjectItem != null && target.ProjectItem.IsKind(Constants.vsProjectItemKindVirtualFolder))
+				{
+					target.ProjectItem.ProjectItems.AddFromFile(file.FullName);
+				}
+				else
+				{
+					project.AddFileToProject(file);
+				}
+
+				VsShellUtilities.OpenDocument(this, file.FullName);
+
+				// Move cursor into position.
+				if (position > 0)
+				{
+					Microsoft.VisualStudio.Text.Editor.IWpfTextView view = ProjectHelpers.GetCurentTextView();
+
+					if (view != null)
+					{
+						view.Caret.MoveTo(new SnapshotPoint(view.TextBuffer.CurrentSnapshot, position));
+					}
+				}
+
+				ExecuteCommandIfAvailable("SolutionExplorer.SyncWithActiveDocument");
+				_dte.ActiveDocument.Activate();
 			}
 			else
 			{
 				MessageBox.Show($"The file '{file}' already exists.", Vsix.Name, MessageBoxButton.OK, MessageBoxImage.Information);
 			}
-		}
-
-		private static bool IsFileNameValid(string fileName)
-		{
-			string[] list = new[] { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "COM0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "LPT0" };
-			return !list.Contains(fileName, StringComparer.OrdinalIgnoreCase);
 		}
 
 		private static async Task<int> WriteFileAsync(Project project, string file)
@@ -257,7 +262,8 @@ namespace MadsKristensen.AddAnyFile
 			// that are added to this folder will end up in the corresponding physical directory.
 			if (Directory.Exists(target.Directory))
 			{
-				PackageUtilities.EnsureOutputPath(Path.Combine(target.Directory, name));
+				// Don't use `PackageUtilities.EnsureOutputPath()` because it can silently fail.
+				Directory.CreateDirectory(Path.Combine(target.Directory, name));
 			}
 
 			Project parent = target.Project;
@@ -281,8 +287,9 @@ namespace MadsKristensen.AddAnyFile
 
 		private void AddProjectFolder(string name, NewItemTarget target)
 		{
-			// Make sure the directory exists before we add it to the project.
-			PackageUtilities.EnsureOutputPath(Path.Combine(target.Directory, name));
+			// Make sure the directory exists before we add it to the project. Don't
+			// use `PackageUtilities.EnsureOutputPath()` because it can silently fail.
+			Directory.CreateDirectory(Path.Combine(target.Directory, name));
 
 			// We can't just add the final directory to the project because that will 
 			// only add the final segment rather than adding each segment in the path.
