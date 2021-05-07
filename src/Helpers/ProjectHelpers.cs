@@ -158,11 +158,54 @@ namespace MadsKristensen.AddAnyFile
 			}
 		}
 
+		public static string GetFileName(this ProjectItem item)
+		{
+			try
+			{
+				return item?.Properties?.Item("FullPath").Value?.ToString();
+			}
+			catch (ArgumentException)
+			{
+				// The property does not exist.
+				return null;
+			}
+		}
+
+		public static Project FindSolutionFolder(this Solution solution, string name)
+		{
+			return solution.Projects.OfType<Project>()
+					.Where(p => p.IsKind(EnvDTE.Constants.vsProjectKindSolutionItems))
+					.Where(p => p.Name == name)
+					.FirstOrDefault();
+		}
+
+		public static Project FindSolutionFolder(this Project project, string name)
+		{
+			return project.ProjectItems.OfType<ProjectItem>()
+					.Where(p => p.IsKind(EnvDTE.Constants.vsProjectItemKindSolutionItems))
+					.Where(p => p.Name == name)
+					.Select(p => p.SubProject)
+					.FirstOrDefault();
+		}
+
 		public static bool IsKind(this Project project, params string[] kindGuids)
 		{
 			foreach (string guid in kindGuids)
 			{
 				if (project.Kind.Equals(guid, StringComparison.OrdinalIgnoreCase))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		public static bool IsKind(this ProjectItem projectItem, params string[] kindGuids)
+		{
+			foreach (string guid in kindGuids)
+			{
+				if (projectItem.Kind.Equals(guid, StringComparison.OrdinalIgnoreCase))
 				{
 					return true;
 				}
