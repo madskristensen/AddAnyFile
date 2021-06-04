@@ -6,7 +6,7 @@ using Microsoft;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
-
+using Microsoft.VisualStudio.Threading;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
@@ -18,12 +18,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Interop;
-using EnvDTE;
-using EnvDTE80;
-using Microsoft;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text;
 
 namespace MadsKristensen.AddAnyFile
 {
@@ -33,30 +27,30 @@ namespace MadsKristensen.AddAnyFile
 	[Guid(PackageGuids.guidAddAnyFilePkgString)]
 	public sealed class AddAnyFilePackage : AsyncPackage
 	{
-		private const string SolutionItemsProjectName = "Solution Items";
-		private static readonly Regex ReservedFileNamePattern = new Regex($@"(?i)^(PRN|AUX|NUL|CON|COM\d|LPT\d)(\.|$)");
-		private static readonly HashSet<char> InvalidFileNameChars = new HashSet<char>(Path.GetInvalidFileNameChars());
+		private const string _solutionItemsProjectName = "Solution Items";
+		private static readonly Regex _reservedFileNamePattern = new Regex($@"(?i)^(PRN|AUX|NUL|CON|COM\d|LPT\d)(\.|$)");
+		private static readonly HashSet<char> _invalidFileNameChars = new HashSet<char>(Path.GetInvalidFileNameChars());
 
 		public static DTE2 _dte;
 
-        protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
-        {
-            await JoinableTaskFactory.SwitchToMainThreadAsync();
+		protected async override System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+		{
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            _dte = await GetServiceAsync(typeof(DTE)) as DTE2;
-            Assumes.Present(_dte);
+			_dte = await GetServiceAsync(typeof(DTE)) as DTE2;
+			Assumes.Present(_dte);
 
-            Logger.Initialize(this, Vsix.Name);
+			Logger.Initialize(this, Vsix.Name);
 
-            if (await GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService mcs)
-            {
-                var menuCommandID = new CommandID(PackageGuids.guidAddAnyFileCmdSet, PackageIds.cmdidMyCommand);
-                var menuItem = new OleMenuCommand(ExecuteAsync, menuCommandID);
-                mcs.AddCommand(menuItem);
-            }
-        }
+			if (await GetServiceAsync(typeof(IMenuCommandService)) is OleMenuCommandService mcs)
+			{
+				CommandID menuCommandID = new CommandID(PackageGuids.guidAddAnyFileCmdSet, PackageIds.cmdidMyCommand);
+				OleMenuCommand menuItem = new OleMenuCommand(ExecuteAsync, menuCommandID);
+				mcs.AddCommand(menuItem);
+			}
+		}
 
-		private async void ExecuteAsync(object sender, EventArgs e)
+		private void ExecuteAsync(object sender, EventArgs e)
 		{
 			NewItemTarget target = NewItemTarget.Create(_dte);
 
@@ -77,13 +71,13 @@ namespace MadsKristensen.AddAnyFile
 				return;
 			}
 
-            var parsedInputs = GetParsedInput(input);
+			string[] parsedInputs = GetParsedInput(input);
 
 			foreach (string name in parsedInputs)
 			{
 				try
 				{
-					await AddItemAsync(name, target);
+					AddItemAsync(name, target).Forget();
 				}
 				catch (Exception ex) when (!ErrorHandler.IsCriticalException(ex))
 				{
@@ -126,12 +120,12 @@ namespace MadsKristensen.AddAnyFile
 			{
 				string name = Path.GetFileName(path);
 
-				if (ReservedFileNamePattern.IsMatch(name))
+				if (_reservedFileNamePattern.IsMatch(name))
 				{
 					throw new InvalidOperationException($"The name '{name}' is a system reserved name.");
 				}
 
-				if (name.Any(c => InvalidFileNameChars.Contains(c)))
+				if (name.Any(c => _invalidFileNameChars.Contains(c)))
 				{
 					throw new InvalidOperationException($"The name '{name}' contains invalid characters.");
 				}
@@ -142,8 +136,8 @@ namespace MadsKristensen.AddAnyFile
 
 		private async System.Threading.Tasks.Task AddFileAsync(string name, NewItemTarget target)
 		{
+			await JoinableTaskFactory.SwitchToMainThreadAsync();
 			FileInfo file;
-
 
 			// If the file is being added to a solution folder, but that
 			// solution folder doesn't have a corresponding directory on
@@ -208,44 +202,43 @@ namespace MadsKristensen.AddAnyFile
 
 		private static async Task<int> WriteFileAsync(Project project, string file)
 		{
-			string extension = Path.GetExtension(file);
 			string template = await TemplateMap.GetTemplateFilePathAsync(project, file);
 
-            if (!string.IsNullOrEmpty(template))
-            {
-                var index = template.IndexOf('$');
+			if (!string.IsNullOrEmpty(template))
+			{
+				int index = template.IndexOf('$');
 
-                if (index > -1)
-                {
-                    template = template.Remove(index, 1);
-                }
+				if (index > -1)
+				{
+					template = template.Remove(index, 1);
+				}
 
-                await WriteToDiskAsync(file, template);
-                return index;
-            }
+				await WriteToDiskAsync(file, template);
+				return index;
+			}
 
-            await WriteToDiskAsync(file, string.Empty);
+			await WriteToDiskAsync(file, string.Empty);
 
-            return 0;
-        }
+			return 0;
+		}
 
-        private static async System.Threading.Tasks.Task WriteToDiskAsync(string file, string content)
-        {
-            using (var writer = new StreamWriter(file, false, GetFileEncoding(file)))
-            {
-                await writer.WriteAsync(content);
-            }
-        }
+		private static async System.Threading.Tasks.Task WriteToDiskAsync(string file, string content)
+		{
+			using (StreamWriter writer = new StreamWriter(file, false, GetFileEncoding(file)))
+			{
+				await writer.WriteAsync(content);
+			}
+		}
 
-        private static Encoding GetFileEncoding(string file)
-        {
-            string[] noBom = { ".cmd", ".bat", ".json" };
-            var ext = Path.GetExtension(file).ToLowerInvariant();
+		private static Encoding GetFileEncoding(string file)
+		{
+			string[] noBom = { ".cmd", ".bat", ".json" };
+			string ext = Path.GetExtension(file).ToLowerInvariant();
 
-            if (noBom.Contains(ext))
-            {
-                return new UTF8Encoding(false);
-            }
+			if (noBom.Contains(ext))
+			{
+				return new UTF8Encoding(false);
+			}
 
 			return new UTF8Encoding(true);
 		}
@@ -258,8 +251,8 @@ namespace MadsKristensen.AddAnyFile
 				// folders for that item, and the file we are adding is intended to be 
 				// added to the solution. Files cannot be added directly to the solution,
 				// so there is a "Solution Items" folder that they are added to.
-				return _dte.Solution.FindSolutionFolder(SolutionItemsProjectName)
-						?? ((Solution2)_dte.Solution).AddSolutionFolder(SolutionItemsProjectName);
+				return _dte.Solution.FindSolutionFolder(_solutionItemsProjectName)
+						?? ((Solution2)_dte.Solution).AddSolutionFolder(_solutionItemsProjectName);
 			}
 
 			// Even though solution folders are always virtual, if the target directory exists,
@@ -292,6 +285,8 @@ namespace MadsKristensen.AddAnyFile
 
 		private void AddProjectFolder(string name, NewItemTarget target)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			// Make sure the directory exists before we add it to the project. Don't
 			// use `PackageUtilities.EnsureOutputPath()` because it can silently fail.
 			Directory.CreateDirectory(Path.Combine(target.Directory, name));
@@ -336,42 +331,43 @@ namespace MadsKristensen.AddAnyFile
 			List<string> results = new List<string>();
 			Match match = pattern.Match(input);
 
-            while (match.Success)
-            {
-                // Always 4 matches w. Group[3] being the extension, extension list, folder terminator ("/" or "\"), or empty string
-                var path = match.Groups[1].Value.Trim() + match.Groups[2].Value;
-                var extensions = match.Groups[3].Value.Split(',');
+			while (match.Success)
+			{
+				// Always 4 matches w. Group[3] being the extension, extension list, folder terminator ("/" or "\"), or empty string
+				string path = match.Groups[1].Value.Trim() + match.Groups[2].Value;
+				string[] extensions = match.Groups[3].Value.Split(',');
 
-                foreach (var ext in extensions)
-                {
-                    var value = path + ext.Trim();
+				foreach (string ext in extensions)
+				{
+					string value = path + ext.Trim();
 
-                    // ensure "file.(txt,,txt)" or "file.txt,,file.txt,File.TXT" returns as just ["file.txt"]
-                    if (value != "" && !value.EndsWith(".", StringComparison.Ordinal) && !results.Contains(value, StringComparer.OrdinalIgnoreCase))
-                    {
-                        results.Add(value);
-                    }
-                }
-                match = match.NextMatch();
-            }
-            return results.ToArray();
-        }
+					// ensure "file.(txt,,txt)" or "file.txt,,file.txt,File.TXT" returns as just ["file.txt"]
+					if (value != "" && !value.EndsWith(".", StringComparison.Ordinal) && !results.Contains(value, StringComparer.OrdinalIgnoreCase))
+					{
+						results.Add(value);
+					}
+				}
+				match = match.NextMatch();
+			}
+			return results.ToArray();
+		}
 
-        private string PromptForFileName(string folder)
-        {
-            var dir = new DirectoryInfo(folder);
-            var dialog = new FileNameDialog(dir.Name);
+		private string PromptForFileName(string folder)
+		{
+			DirectoryInfo dir = new DirectoryInfo(folder);
+			FileNameDialog dialog = new FileNameDialog(dir.Name);
 
-            var hwnd = new IntPtr(_dte.MainWindow.HWnd);
-            var window = (System.Windows.Window)HwndSource.FromHwnd(hwnd).RootVisual;
-            dialog.Owner = window;
+			//IntPtr hwnd = new IntPtr(_dte.MainWindow.HWnd);
+			//System.Windows.Window window = (System.Windows.Window)HwndSource.FromHwnd(hwnd).RootVisual;
+			dialog.Owner = Application.Current.MainWindow;
 
-            var result = dialog.ShowDialog();
-            return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
-        }
+			bool? result = dialog.ShowDialog();
+			return (result.HasValue && result.Value) ? dialog.Input : string.Empty;
+		}
 
 		private void ExecuteCommandIfAvailable(string commandName)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
 			Command command;
 
 			try

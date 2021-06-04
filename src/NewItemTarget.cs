@@ -1,5 +1,6 @@
 ﻿using EnvDTE;
 using EnvDTE80;
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -46,6 +47,8 @@ namespace MadsKristensen.AddAnyFile
 
 		private static NewItemTarget CreateFromSolutionExplorerSelection(DTE2 dte)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			Array items = (Array)dte.ToolWindows.SolutionExplorer.SelectedItems;
 
 			if (items.Length == 1)
@@ -108,6 +111,8 @@ namespace MadsKristensen.AddAnyFile
 
 		private static ProjectItem ResolveToPhysicalProjectItem(ProjectItem projectItem)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			if (projectItem.IsKind(Constants.vsProjectItemKindVirtualFolder))
 			{
 				// Find the first descendant item that is not a virtual folder.
@@ -122,6 +127,8 @@ namespace MadsKristensen.AddAnyFile
 
 		private static string GetSolutionFolderPath(Project folder)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			string solutionDirectory = Path.GetDirectoryName(folder.DTE.Solution.FullName);
 			List<string> segments = new List<string>();
 
