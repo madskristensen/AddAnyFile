@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="2E78AA18-E864-4FBB-B8C8-6186FC865DB5" Version="4.0" Language="en-US" Publisher="Mads Kristensen" />
+        <Identity Id="d48e8f25-661b-4970-8b66-03f051ba5fc3" Version="4.0" Language="en-US" Publisher="Mads Kristensen" />
         <DisplayName>Add New File (64-bit)</DisplayName>
         <Description xml:space="preserve">The fastest and easiest way to add new files to any project - including files that start with a dot</Description>
         <MoreInfo>https://marketplace.visualstudio.com/items?itemName=MadsKristensen.AddNewFile</MoreInfo>
