@@ -40,6 +40,28 @@ For example, by typing **scripts/test.js** in the dialog, the
 folder **scripts** is created if it doesn't exist and the file
 **test.js** is then placed into it.
 
+### Custom templates
+
+Create a `.templates` folder at the root of your project.
+The templates inside this folder will be used alongside the default ones.
+
+#### Keywords
+Inside the template those keywords can be used:
+- `{itemname}`: The name of the file without the extension
+- `{namespace}`: The namespace
+
+#### Types of template
+3 types of template are available:
+
+##### Exact match
+When creating the file `Dockerfile`, the extension will look for `dockerfile.txt` template.
+
+##### Convention match or Partial match
+If you create a template with the name `repository.txt`, then it will be used when creating a file ending with `Repository` (eg: DataRepository).
+
+##### Extension match
+When creating the file `Test.cs`, the extension will look for `cs.txt` template.
+
 ## Contribute
 Check out the [contribution guidelines](.github/CONTRIBUTING.md)
 if you want to contribute to this project.
