@@ -129,7 +129,8 @@ namespace MadsKristensen.AddAnyFile
 				return null;
 			}
 
-			ProjectItem item = project.ProjectItems.AddFromFile(file.FullName);
+			//ProjectItem item = project.ProjectItems.AddFromFile(file.FullName);
+			ProjectItem item = project.ProjectItems.AddFromTemplate(file.FullName, itemType);
 			item.SetItemType(itemType);
 			return item;
 		}
