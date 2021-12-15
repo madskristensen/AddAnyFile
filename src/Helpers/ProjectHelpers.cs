@@ -117,6 +117,7 @@ namespace MadsKristensen.AddAnyFile
 
 		public static ProjectItem AddFileToProject(this Project project, FileInfo file, string itemType = null)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
 			if (project.IsKind(ProjectTypes.ASPNET_5, ProjectTypes.SSDT))
 			{
 				return _dte.Solution.FindProjectItem(file.FullName);
@@ -129,8 +130,7 @@ namespace MadsKristensen.AddAnyFile
 				return null;
 			}
 
-			//ProjectItem item = project.ProjectItems.AddFromFile(file.FullName);
-			ProjectItem item = project.ProjectItems.AddFromTemplate(file.FullName, itemType);
+			ProjectItem item = project.ProjectItems.AddFromTemplate(file.FullName, file.FullName);
 			item.SetItemType(itemType);
 			return item;
 		}
