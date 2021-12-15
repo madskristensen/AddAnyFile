@@ -130,7 +130,10 @@ namespace MadsKristensen.AddAnyFile
 				return null;
 			}
 
-			ProjectItem item = project.ProjectItems.AddFromTemplate(file.FullName, file.FullName);
+			// Appears to be a bug in project system or VS, so need to make sure the project is aware of the folder structure first,
+			// then add the time to that folderStructure (create and/or find)
+			ProjectItem folderItem = project.ProjectItems.AddFolder(file.DirectoryName);
+			ProjectItem item = folderItem.ProjectItems.AddFromTemplate(file.FullName, file.Name);
 			item.SetItemType(itemType);
 			return item;
 		}
