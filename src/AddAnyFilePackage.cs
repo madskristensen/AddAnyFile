@@ -289,32 +289,9 @@ namespace MadsKristensen.AddAnyFile
 
 			// Make sure the directory exists before we add it to the project. Don't
 			// use `PackageUtilities.EnsureOutputPath()` because it can silently fail.
-			Directory.CreateDirectory(Path.Combine(target.Directory, name));
-
-			// We can't just add the final directory to the project because that will 
-			// only add the final segment rather than adding each segment in the path.
-			// Split the name into segments and add each folder individually.
-			ProjectItems items = target.ProjectItem?.ProjectItems ?? target.Project.ProjectItems;
-			string parentDirectory = target.Directory;
-
-			foreach (string segment in SplitPath(name))
-			{
-				parentDirectory = Path.Combine(parentDirectory, segment);
-
-				// Look for an existing folder in case it's already in the project.
-				ProjectItem folder = items
-						.OfType<ProjectItem>()
-						.Where(item => segment.Equals(item.Name, StringComparison.OrdinalIgnoreCase))
-						.Where(item => item.IsKind(Constants.vsProjectItemKindPhysicalFolder, Constants.vsProjectItemKindVirtualFolder))
-						.FirstOrDefault();
-
-				if (folder == null)
-				{
-					folder = items.AddFromDirectory(parentDirectory);
-				}
-
-				items = folder.ProjectItems;
-			}
+			string targetFolder = Path.Combine(target.Directory, name);
+			Directory.CreateDirectory(targetFolder);
+			ProjectHelpers.AddFolders(target.Project, targetFolder);
 		}
 
 		private static string[] SplitPath(string path)
@@ -355,11 +332,13 @@ namespace MadsKristensen.AddAnyFile
 		private string PromptForFileName(string folder)
 		{
 			DirectoryInfo dir = new DirectoryInfo(folder);
-			FileNameDialog dialog = new FileNameDialog(dir.Name);
+			FileNameDialog dialog = new FileNameDialog(dir.Name)
+			{
 
-			//IntPtr hwnd = new IntPtr(_dte.MainWindow.HWnd);
-			//System.Windows.Window window = (System.Windows.Window)HwndSource.FromHwnd(hwnd).RootVisual;
-			dialog.Owner = Application.Current.MainWindow;
+				//IntPtr hwnd = new IntPtr(_dte.MainWindow.HWnd);
+				//System.Windows.Window window = (System.Windows.Window)HwndSource.FromHwnd(hwnd).RootVisual;
+				Owner = Application.Current.MainWindow
+			};
 
 			bool? result = dialog.ShowDialog();
 			return (result.HasValue && result.Value) ? dialog.Input : string.Empty;

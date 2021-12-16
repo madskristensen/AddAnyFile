@@ -1,5 +1,4 @@
 ﻿using EnvDTE;
-
 using EnvDTE80;
 
 using Microsoft;
@@ -13,7 +12,6 @@ using Microsoft.VisualStudio.TextManager.Interop;
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -141,13 +139,40 @@ namespace MadsKristensen.AddAnyFile
 			}
 			else
 			{
-				ProjectItem folderItem = project.ProjectItems.AddFolder(file.DirectoryName);
-				projectItems = folderItem.ProjectItems;
+				projectItems = AddFolders(project, file.DirectoryName).ProjectItems;
 			}
-			
+
 			ProjectItem item = projectItems.AddFromTemplate(file.FullName, file.Name);
 			item.SetItemType(itemType);
-			
+
+			return item;
+		}
+
+		public static ProjectItem AddFolders(Project project, string targetFolder)
+		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
+			List<string> list = new List<string>();
+			DirectoryInfo root = new DirectoryInfo(project.GetRootFolder());
+			DirectoryInfo target = new DirectoryInfo(targetFolder);
+
+			while (target.FullName.Equals(root.FullName.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
+			{
+				list.Add(target.Name);
+				target = target.Parent;
+			}
+
+			list.Reverse();
+
+			ProjectItem existing = project.ProjectItems.Cast<ProjectItem>().FirstOrDefault(i => i.Name.Equals(list.First(), StringComparison.OrdinalIgnoreCase));
+			ProjectItem item = existing ?? project.ProjectItems.AddFolder(list.First());
+
+			foreach (string folder in list.Skip(1))
+			{
+				existing = item.ProjectItems.Cast<ProjectItem>().FirstOrDefault(i => i.Name.Equals(folder, StringComparison.OrdinalIgnoreCase));
+				item = existing ?? item.ProjectItems.AddFolder(folder);
+			}
+
 			return item;
 		}
 
