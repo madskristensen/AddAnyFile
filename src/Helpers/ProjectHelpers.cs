@@ -13,6 +13,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -117,6 +118,7 @@ namespace MadsKristensen.AddAnyFile
 
 		public static ProjectItem AddFileToProject(this Project project, FileInfo file, string itemType = null)
 		{
+			ThreadHelper.ThrowIfNotOnUIThread();
 			if (project.IsKind(ProjectTypes.ASPNET_5, ProjectTypes.SSDT))
 			{
 				return _dte.Solution.FindProjectItem(file.FullName);
@@ -129,8 +131,23 @@ namespace MadsKristensen.AddAnyFile
 				return null;
 			}
 
-			ProjectItem item = project.ProjectItems.AddFromFile(file.FullName);
+			// Appears to be a bug in project system or VS, so need to make sure the project is aware of the folder structure first,
+			// then add the time to that folderStructure (create and/or find)
+			// if adding to the root ProjectItem then just do that.
+			ProjectItems projectItems;
+			if (string.Equals(root.TrimEnd(Path.DirectorySeparatorChar), file.DirectoryName, StringComparison.InvariantCultureIgnoreCase))
+			{
+				projectItems = project.ProjectItems;
+			}
+			else
+			{
+				ProjectItem folderItem = project.ProjectItems.AddFolder(file.DirectoryName);
+				projectItems = folderItem.ProjectItems;
+			}
+			
+			ProjectItem item = projectItems.AddFromTemplate(file.FullName, file.Name);
 			item.SetItemType(itemType);
+			
 			return item;
 		}
 
