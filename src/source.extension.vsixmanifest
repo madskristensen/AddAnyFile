@@ -4,9 +4,8 @@
         <Identity Id="d48e8f25-661b-4970-8b66-03f051ba5fc3" Version="4.0" Language="en-US" Publisher="Mads Kristensen" />
         <DisplayName>Add New File (64-bit)</DisplayName>
         <Description xml:space="preserve">The fastest and easiest way to add new files to any project - including files that start with a dot</Description>
-        <MoreInfo>https://marketplace.visualstudio.com/items?itemName=MadsKristensen.AddNewFile</MoreInfo>
+        <MoreInfo>https://github.com/madskristensen/AddAnyFile</MoreInfo>
         <License>Resources\LICENSE</License>
-        <ReleaseNotes>https://github.com/madskristensen/AddAnyFile/blob/master/CHANGELOG.md</ReleaseNotes>
         <Icon>Resources\logo.png</Icon>
         <PreviewImage>Resources\logo.png</PreviewImage>
         <Tags>file, add, template</Tags>

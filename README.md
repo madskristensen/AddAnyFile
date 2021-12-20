@@ -12,8 +12,6 @@ or get the
 A Visual Studio extension for easily adding new files to any project. Simply hit Shift+F2 to create an empty file in the
 selected folder or in the same folder as the selected file.
 
-See the [changelog](CHANGELOG.md) for updates and roadmap.
-
 ### Features
 
 - Easily create any file with any file extension
@@ -61,16 +59,3 @@ If you create a template with the name `repository.txt`, then it will be used wh
 
 ##### Extension match
 When creating the file `Test.cs`, the extension will look for `cs.txt` template.
-
-## Contribute
-Check out the [contribution guidelines](.github/CONTRIBUTING.md)
-if you want to contribute to this project.
-
-For cloning and building this project yourself, make sure
-to install the
-[Extensibility Tools 2015](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.ExtensibilityTools)
-extension for Visual Studio which enables some features
-used by this project.
-
-## License
-[Apache 2.0](LICENSE)
