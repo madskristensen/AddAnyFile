@@ -156,7 +156,7 @@ namespace MadsKristensen.AddAnyFile
 			DirectoryInfo root = new DirectoryInfo(project.GetRootFolder());
 			DirectoryInfo target = new DirectoryInfo(targetFolder);
 
-			while (target.FullName.Equals(root.FullName.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
+			while (!target.FullName.Equals(root.FullName.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
 			{
 				list.Add(target.Name);
 				target = target.Parent;
