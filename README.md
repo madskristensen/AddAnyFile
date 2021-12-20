@@ -1,13 +1,9 @@
 # Add Any File
 
-[![Build status](https://ci.appveyor.com/api/projects/status/252jpryc38qah37x?svg=true)](https://ci.appveyor.com/project/madskristensen/addanyfile)
-
-Download the extension at the
-[VS Gallery](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.AddNewFile)
-or get the
-[nightly build](http://vsixgallery.com/extension/2E78AA18-E864-4FBB-B8C8-6186FC865DB3/)
-
--------------------------------------------------
+[![Build](https://github.com/madskristensen/AddAnyFile/actions/workflows/build.yaml/badge.svg)](https://github.com/madskristensen/AddAnyFile/actions/workflows/build.yaml)
+[![VS Marketplace](https://vsmarketplacebadges.dev/version-short/madskristensen.AddNewFile64.svg)](https://marketplace.visualstudio.com/items?itemName=MadsKristensen.AddNewFile64)
+![Installs](https://img.shields.io/visual-studio-marketplace/i/madskristensen.AddNewFile?label=Installs&logo=visualstudio)
+![Rating](https://vsmarketplacebadges.dev/rating-short/madskristensen.AddNewFile.svg)
 
 A Visual Studio extension for easily adding new files to any project. Simply hit Shift+F2 to create an empty file in the
 selected folder or in the same folder as the selected file.
