@@ -8,7 +8,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{50C409A6-1C74-4C72-887A-3AC964BD505D}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
-		appveyor.yml = appveyor.yml
 		.github\workflows\build.yaml = .github\workflows\build.yaml
 		README.md = README.md
 		vs-publish.json = vs-publish.json
