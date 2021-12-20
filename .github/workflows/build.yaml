@@ -41,11 +41,11 @@ jobs:
     - name: Build
       run: msbuild /v:m -restore /p:OutDir=../_built
       
-    - name: Setup test
-      uses: darenm/Setup-VSTest@v1
+    #- name: Setup test
+    #  uses: darenm/Setup-VSTest@v1
 
-    - name: Test
-      run: vstest.console.exe _built\*test.dll
+    #- name: Test
+    #  run: vstest.console.exe _built\*test.dll
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2

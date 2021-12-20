@@ -11,7 +11,7 @@ namespace MadsKristensen.AddAnyFile
         public const string Name = "Add New File (64-bit)";
         public const string Description = @"The fastest and easiest way to add new files to any project - including files that start with a dot";
         public const string Language = "en-US";
-        public const string Version = "4.0";
+        public const string Version = "4.1";
         public const string Author = "Mads Kristensen";
         public const string Tags = "file, add, template";
     }
