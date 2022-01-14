@@ -55,3 +55,12 @@ If you create a template with the name `repository.txt`, then it will be used wh
 
 ##### Extension match
 When creating the file `Test.cs`, the extension will look for `cs.txt` template.
+
+### How can I help?
+If you enjoy using the extension, please give it a ????? rating on the [Visual Studio Marketplace][marketplace].
+
+Should you encounter bugs or if you have feature requests, head on over to the [GitHub repo][repo] to open an issue if one doesn't already exist.
+
+Pull requests are also very welcome, since I can't always get around to fixing all bugs myself. This is a personal passion project, so my time is limited.
+
+Another way to help out is to [sponser me on GitHub](https://github.com/sponsors/madskristensen).
