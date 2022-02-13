@@ -108,7 +108,9 @@
     <Content Include="Templates\.html.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Resource Include="Templates\.linq.txt" />
+    <Content Include="Templates\.linq.txt">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Templates\.md.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
