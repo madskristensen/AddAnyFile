@@ -54,7 +54,7 @@ When creating the file `Dockerfile`, the extension will look for `dockerfile.txt
 If you create a template with the name `repository.txt`, then it will be used when creating a file ending with `Repository` (eg: DataRepository).
 
 ##### Extension match
-When creating the file `Test.cs`, the extension will look for `cs.txt` template.
+When creating the file `Test.cs`, the extension will look for `.cs.txt` template.
 
 ### How can I help?
 If you enjoy using the extension, please give it a ????? rating on the [Visual Studio Marketplace][marketplace].
