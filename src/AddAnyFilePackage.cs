@@ -33,7 +33,7 @@ namespace MadsKristensen.AddAnyFile
 
 		public static DTE2 _dte;
 
-		protected async override System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
 		{
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -146,6 +146,14 @@ namespace MadsKristensen.AddAnyFile
 			{
 				file = new FileInfo(Path.Combine(Path.GetDirectoryName(_dte.Solution.FullName), Path.GetFileName(name)));
 			}
+			else if (name.StartsWith("sln\\"))
+			{
+				file = new FileInfo(Path.Combine(Path.GetDirectoryName(_dte.Solution.FullName), Path.GetFileName(name.Substring(4))));
+			}
+			else if (name.StartsWith("prj\\") && target.Project != null)
+			{
+				file = new FileInfo(Path.Combine(Path.GetDirectoryName(target.Project.FileName), Path.GetFileName(name.Substring(4))));
+			}
 			else
 			{
 				file = new FileInfo(Path.Combine(target.Directory, name));
@@ -247,8 +255,8 @@ namespace MadsKristensen.AddAnyFile
 		{
 			if (target.IsSolution && string.IsNullOrEmpty(name))
 			{
-				// An empty solution folder name means we are not creating any solution 
-				// folders for that item, and the file we are adding is intended to be 
+				// An empty solution folder name means we are not creating any solution
+				// folders for that item, and the file we are adding is intended to be
 				// added to the solution. Files cannot be added directly to the solution,
 				// so there is a "Solution Items" folder that they are added to.
 				return _dte.Solution.FindSolutionFolder(_solutionItemsProjectName)
@@ -268,7 +276,7 @@ namespace MadsKristensen.AddAnyFile
 
 			foreach (string segment in SplitPath(name))
 			{
-				// If we don't have a parent project yet, 
+				// If we don't have a parent project yet,
 				// then this folder is added to the solution.
 				if (parent == null)
 				{
@@ -334,7 +342,6 @@ namespace MadsKristensen.AddAnyFile
 			DirectoryInfo dir = new DirectoryInfo(folder);
 			FileNameDialog dialog = new FileNameDialog(dir.Name)
 			{
-
 				//IntPtr hwnd = new IntPtr(_dte.MainWindow.HWnd);
 				//System.Windows.Window window = (System.Windows.Window)HwndSource.FromHwnd(hwnd).RootVisual;
 				Owner = Application.Current.MainWindow
