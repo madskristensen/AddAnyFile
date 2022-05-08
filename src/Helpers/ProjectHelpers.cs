@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using VSLangProj;
 
 namespace MadsKristensen.AddAnyFile
 {
@@ -254,6 +255,25 @@ namespace MadsKristensen.AddAnyFile
 			}
 
 			return false;
+		}
+
+		public static string GetMVCNamespace(this Project project)
+		{
+			try
+			{
+				ThreadHelper.ThrowIfNotOnUIThread();
+				var reference = (project.Object as VSProject).References.Cast<Reference>().Where(x => x.Name == "Microsoft.AspNetCore.Mvc" || x.Name == "System.Web.Mvc").FirstOrDefault();
+				return reference.Name;
+			}
+			catch
+			{
+				return null;
+			}
+		}
+
+		public static bool IsMVCProject(this Project project)
+		{
+			return project.GetMVCNamespace() != null;
 		}
 
 		private static IEnumerable<Project> GetChildProjects(Project parent)
