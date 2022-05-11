@@ -105,6 +105,12 @@
     <Content Include="Templates\.bowerrc.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="Templates\.cs-controller.txt">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Templates\.cs-enum.txt">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Templates\.html.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
