@@ -120,6 +120,7 @@
     <Content Include="Templates\.md.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Resource Include="Templates\.xaml.txt" />
     <Content Include="Templates\gruntfile.js.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
