@@ -56,6 +56,11 @@ If you create a template with the name `repository.txt`, then it will be used wh
 ##### Extension match
 When creating the file `Test.cs`, the extension will look for `.cs.txt` template.
 
+### File-scoped namespaces (C#)
+The extension follows the code formatting preferences set in Visual Studio.
+To enable file-scoped namespaces for new C# files, change the code style preference found at:
+Tools > Options > Text Editor > C# > Code Style > Code block preferences > Namespace declarations
+
 ### How can I help?
 If you enjoy using the extension, please give it a ????? rating on the [Visual Studio Marketplace][marketplace].
 
