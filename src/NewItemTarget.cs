@@ -93,8 +93,8 @@ namespace MadsKristensen.AddAnyFile
 			{
 				// The selected item needs a directory. This project item could be 
 				// a virtual folder, so resolve it to a physical file or folder.
-				projectItem = ResolveToPhysicalProjectItem(projectItem);
-				string fileName = projectItem?.GetFileName();
+				var physical_projectItem = ResolveToPhysicalProjectItem(projectItem);
+				string fileName = physical_projectItem?.GetFileName();
 
 				if (string.IsNullOrEmpty(fileName))
 				{
