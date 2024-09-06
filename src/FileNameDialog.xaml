@@ -10,15 +10,16 @@
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="auto" />
+            <ColumnDefinition Width="16.404" />
+            <ColumnDefinition Width="69.432"/>
             <ColumnDefinition />
             <ColumnDefinition Width="auto" />
         </Grid.ColumnDefinitions>
 
-        <Label Grid.Row="0" Grid.Column="0" Name="lblFolder" Content="Folder name:" HorizontalAlignment="Left" Margin="5 0 0 0" VerticalAlignment="Center" Height="26" FontWeight="SemiBold" />
-        <TextBox Grid.Row="0" Grid.Column="1" Name="txtName" VerticalContentAlignment="Center" Height="23" TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Stretch" MinWidth="210" />
-        <Button Grid.Row="0" Grid.Column="2" Content="Add file" HorizontalAlignment="Center" Margin="10,0" VerticalAlignment="Center" Width="75" Height="23" IsDefault="True" Name="btnCreate" Click="Button_Click" />
+        <Label Grid.Column="0" Name="lblFolder" Content="Folder name:" HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Center" Height="26" FontWeight="SemiBold" Grid.ColumnSpan="3" />
+        <TextBox Grid.Column="2" Name="txtName" VerticalContentAlignment="Center" Height="23" TextWrapping="Wrap" VerticalAlignment="Center" MinWidth="210" />
+        <Button Grid.Column="3" Content="Add file" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Height="23" IsDefault="True" Name="btnCreate" Click="Button_Click" />
 
-        <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Name="lblTips" Content="Tips" HorizontalAlignment="Left" Margin="5,0" VerticalAlignment="Bottom" Height="26" />
+        <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="lblTips" Content="Tips" HorizontalAlignment="Left" Margin="5,0,0,0" VerticalAlignment="Center" Height="26" />
     </Grid>
 </Window>
