@@ -148,6 +148,10 @@ namespace MadsKristensen.AddAnyFile
 			{
 				return extension += "-enum";
 			}
+			else if (Regex.IsMatch(safeName, @".+Tests.*"))
+			{
+				return extension += "-tests";
+			}
 			else if (Regex.IsMatch(safeName, @".+Controller$") && project.IsMVCProject())
 			{
 				return extension += "-controller";
