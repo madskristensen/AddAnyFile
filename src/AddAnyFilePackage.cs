@@ -177,7 +177,7 @@ namespace MadsKristensen.AddAnyFile
 				}
 
 				int position = await WriteFileAsync(project, file.FullName);
-				if (target.ProjectItem != null && target.ProjectItem.IsKind(Constants.vsProjectItemKindVirtualFolder))
+				if (target.ProjectItem != null)
 				{
 					target.ProjectItem.ProjectItems.AddFromFile(file.FullName);
 				}
